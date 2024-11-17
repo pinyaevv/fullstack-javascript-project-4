@@ -1,0 +1,11 @@
+node_modules/
+
+package-lock.json
+
+*.log
+
+*.tmp
+
+coverage
+
+.DS_Store
