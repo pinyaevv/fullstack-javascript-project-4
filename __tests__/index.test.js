@@ -1,17 +1,17 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import nock from 'nock';
 import os from 'os';
-import downloadPage from './src/downloadPage.js';
+import downloadPage from '../src/downloadPage.js';
 
 let tempDir;
 
 beforeEach(async () => {
-    tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
 });
 
 afterEach(async () => {
-    await fs.promise.rm(tempDir, { recursive: true });
+    await fs.rm(tempDir, { recursive: true });
 });
 
 test('download page and save it', async () => {
@@ -23,13 +23,13 @@ test('download page and save it', async () => {
       .reply(200, dataExpected);
     
     const filePath = await downloadPage(url, tempDir);
-    const fileExists = await fs.promises
+    const fileExists = await fs
       .access(filePath)
       .then(() => true)
       .catch(() => false);
     expect(fileExists).toBe(true);
 
-    const fileData = await fs.promises.readFile(filePath, 'utf-8');
+    const fileData = await fs.readFile(filePath, 'utf-8');
     expect(fileData).toBe(dataExpected);
 });
 
@@ -42,12 +42,12 @@ test('download another page and save it', async () =>{
       .reply(200, dataExpected);
     
     const filePath = await downloadPage(url, tempDir);
-    const fileExists = await fs.promises
+    const fileExists = await fs
       .access(filePath)
       .then(() => true)
       .catch(() => false);
     expect(fileExists).toBe(true);
 
-    const fileData = await fs.promises.readFile(filePath, 'utf-8');
+    const fileData = await fs.readFile(filePath, 'utf-8');
     expect(fileData).toBe(dataExpected);
 });
