@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import path, { dirname, join } from 'path';
+import path, { dirname } from 'path';
 import nock from 'nock';
 import os from 'os';
 import downloadPage from '../src/downloadPage.js';
@@ -8,8 +8,11 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const getFixturePath = (filename) => join(__dirname, '..', '__fixtures__', filename);
-const getDataFile = (filename) => fs.readFileSync(getFixturePath(filename), 'utf-8');
+const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', filename);
+const getDataFile = async (filename) => {
+  const data = await fs.readFile(getFixturePath(filename), 'utf-8');
+  return data;
+};
 
 let tempDir;
 
@@ -23,7 +26,7 @@ afterEach(async () => {
 
 test('download page and save it', async () => {
     const url = 'https://ru.hexlet.io/courses';
-    const dataExpected = '<html><body>Content</html></body>';
+    const dataExpected = '<html><head></head><body>Content</body></html>';
 
     nock('https://ru.hexlet.io')
       .get('/courses')
@@ -42,7 +45,7 @@ test('download page and save it', async () => {
 
 test('download another page and save it', async () =>{
     const url = 'https://ru.hexlet.io/another-courses';
-    const dataExpected = '<html><body>Another content</html></body>';
+    const dataExpected = '<html><head></head><body>Another content</body></html>';
 
     nock('https://ru.hexlet.io')
       .get('/another-courses')
@@ -61,9 +64,18 @@ test('download another page and save it', async () =>{
 
 test('download page and image', async () =>{
   const url = 'https://ru.hexlet.io/courses';
-  const dataFile = getDataFile('page.html');
-  const dataExpected = getDataFile('expectedPage.html');
-  const pathFileImage = path.join(tempDir, 'ru-hexlet-io-courses_files', 'ru-hexlet-io-assets-professions-nodejs.png');
+  const dataFile = await getDataFile('page.html');
+  const dataExpected = await getDataFile('expectedPage.html');
+  const imageBuffer = await getDataFile('ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png');
+  
+  const pathFileImage = path.join(
+    tempDir, 
+    'ru-hexlet-io-courses_files', 
+    'ru-hexlet-io-assets-professions-nodejs.png');
+
+  nock('https://ru.hexlet.io')
+    .get('/assets/professions/nodejs.png')
+    .reply(200, imageBuffer);
 
   nock('https://ru.hexlet.io')
     .get('/courses')
@@ -79,4 +91,7 @@ test('download page and image', async () =>{
 
   const fileData = await fs.readFile(filePath, 'utf-8');
   expect(fileData).toBe(dataExpected);
+
+  const updatedHtml = await fs.readFile(filePath, 'utf-8');
+  expect(updatedHtml).toContain('ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png');
 });
