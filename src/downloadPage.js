@@ -30,7 +30,12 @@ const downloadPage = (url, outputDir) => {
             }
 
             if (imgUrl) {
-              const imgName = path.basename(imgUrl).replace(/^\/+/, '');
+              const imgName = imgUrl
+                .replace(/^https?:\/\//, '')
+                .replace(/[^a-zA-Z0-9]/g, '-')
+                .replace(/-\w+$/, '')
+                + path.extname(imgUrl);
+
               const imgPath = path.join(dir, imgName);
 
               return axios.get(imgUrl, { responseType: 'arraybuffer' })
@@ -48,7 +53,7 @@ const downloadPage = (url, outputDir) => {
             }
           });
 
-          return Promise.allSettled(imageDownload)
+          return Promise.all(imageDownload)
             .then(() => {
               const fileName = url
                 .replace(/^https?:\/\//, '')

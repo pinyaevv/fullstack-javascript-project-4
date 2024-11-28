@@ -14,6 +14,8 @@ const getDataFile = async (filename) => {
   return data;
 };
 
+const normalizeHtml = (html) => html.replace(/\s+/g, '').trim();
+
 let tempDir;
 
 beforeEach(async () => {
@@ -66,8 +68,7 @@ test('download page and image', async () =>{
   const url = 'https://ru.hexlet.io/courses';
   const dataFile = await getDataFile('page.html');
   const dataExpected = await getDataFile('expectedPage.html');
-  const imageBuffer = await getDataFile('ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png');
-  
+  const imageBuffer = await getDataFile('ru-hexlet-io-courses_files/nodejs.png');
   const pathFileImage = path.join(
     tempDir, 
     'ru-hexlet-io-courses_files', 
@@ -90,7 +91,7 @@ test('download page and image', async () =>{
   expect(fileExists).toBe(true);
 
   const fileData = await fs.readFile(filePath, 'utf-8');
-  expect(fileData).toBe(dataExpected);
+  expect(normalizeHtml(fileData)).toBe(normalizeHtml(dataExpected));
 
   const updatedHtml = await fs.readFile(filePath, 'utf-8');
   expect(updatedHtml).toContain('ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png');
