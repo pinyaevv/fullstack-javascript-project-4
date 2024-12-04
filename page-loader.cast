@@ -1,7 +1,0 @@
-{"version": 2, "width": 230, "height": 17, "timestamp": 1732012570, "env": {"SHELL": "/bin/bash", "TERM": "xterm-256color"}}
-[0.39471, "o", "\u001b[?2004h\u001b]0;azyzy-pin1939@VmV: ~/education/fullstack-javascript-project-4\u0007\u001b[01;32mazyzy-pin1939@VmV\u001b[00m:\u001b[01;34m~/education/fullstack-javascript-project-4\u001b[00m$ "]
-[2.27912, "o", "\u001b[7mpageloader --output /tmp https://ru.hexlet.io/courses\u001b[27m"]
-[3.32, "o", "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bpageloader --output /tmp https://ru.hexlet.io/courses\r\n\u001b[?2004l\r"]
-[4.217468, "o", "/tmp/ru-hexlet-io-courses.html\r\n"]
-[4.226046, "o", "\u001b[?2004h\u001b]0;azyzy-pin1939@VmV: ~/education/fullstack-javascript-project-4\u0007\u001b[01;32mazyzy-pin1939@VmV\u001b[00m:\u001b[01;34m~/education/fullstack-javascript-project-4\u001b[00m$ "]
-[7.625115, "o", "\u001b[?2004l\r\r\nexit\r\n"]
