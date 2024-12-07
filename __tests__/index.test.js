@@ -5,6 +5,9 @@ import os from 'os';
 import downloadPage from '../src/downloadPage.js';
 import { fileURLToPath } from 'url';
 
+nock.recorder.rec();
+nock.debug(console.log);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

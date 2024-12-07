@@ -1,19 +1,17 @@
-import axios from 'axios';
+import axios from './debug/debug-axios.js';
 import fs from 'fs/promises';
 import path from 'path';
 import * as cheerio from 'cheerio';
 
-// Функция для генерации имени файла с учётом расширения
 const generateFileName = (resourceUrl) => {
-  const ext = path.extname(resourceUrl) || '.html'; // Используем расширение файла, если оно есть
+  const ext = path.extname(resourceUrl) || '.html';
   const baseName = resourceUrl
-    .replace(/^https?:\/\//, '')  // Убираем протокол
-    .replace(/[^a-zA-Z0-9]/g, '-') // Заменяем все неалфавитные символы на дефисы
-    .replace(/-$/, ''); // Убираем дефис в конце
+    .replace(/^https?:\/\//, '')
+    .replace(/[^a-zA-Z0-9]/g, '-')
+    .replace(/-$/, '');
   return `${baseName}${ext}`;
 };
 
-// Функция для скачивания ресурса
 const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => {
   const fullUrl = new URL(resourceUrl, baseUrl).toString();
   const fileName = generateFileName(resourceUrl);
@@ -27,9 +25,7 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
         return;
       }
 
-      // Сохраняем ресурс в локальную папку
       return fs.writeFile(filePath, response.data).then(() => {
-        // Обновляем аттрибут элемента с путём к локальному файлу
         const relativePath = path.posix.join(path.basename(outputDir), fileName);
         $(element).attr(attr, relativePath);
         console.log(`Resource downloaded: ${fullUrl}`);
@@ -40,7 +36,6 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
     });
 };
 
-// Основная функция для скачивания страницы
 const downloadPage = (url, outputDir) => {
   console.log(`Started downloading page: ${url}`);
   return axios
@@ -55,18 +50,15 @@ const downloadPage = (url, outputDir) => {
         .concat('_files');
       const resourcesDir = path.join(outputDir, dirName);
 
-      // Создаем папку для ресурсов
       return fs
         .mkdir(resourcesDir, { recursive: true })
         .then(() => {
           const downloadPromises = [];
 
-          // Преобразуем все локальные ресурсы (собираем ресурсы из link, script и img)
           $('link[href], script[src], img[src]').each((_, element) => {
             const attr = $(element).is('link') || $(element).is('script') ? 'href' : 'src';
             const resourceUrl = $(element).attr(attr);
 
-            // Загружаем все ресурсы, преобразуя относительные URL в абсолютные
             if (resourceUrl) {
               downloadPromises.push(
                 downloadResource(url, resourcesDir, resourceUrl, element, attr, $)
@@ -74,7 +66,6 @@ const downloadPage = (url, outputDir) => {
             }
           });
 
-          // Ждем загрузки всех ресурсов, затем сохраняем HTML страницу
           return Promise.all(downloadPromises).then(() => {
             const fileName = generateFileName(url);
             const filePath = path.join(outputDir, fileName);
