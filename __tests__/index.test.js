@@ -1,12 +1,17 @@
 import fs from 'fs/promises';
+import debug from 'debug';
 import path, { dirname } from 'path';
 import nock from 'nock';
 import os from 'os';
 import downloadPage from '../src/downloadPage.js';
 import { fileURLToPath } from 'url';
 
-nock.recorder.rec();
-nock.debug(console.log);
+const logNock = debug('page-loader:nock');
+
+nock.recorder.rec({
+  output_objects: true,
+  logging: logNock,
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,6 +28,8 @@ let tempDir;
 
 beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+    nock.disableNetConnect();
+    nock.cleanAll();
 });
 
 afterEach(async () => {

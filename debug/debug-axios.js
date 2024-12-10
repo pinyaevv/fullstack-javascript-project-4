@@ -1,22 +1,17 @@
 import axios from 'axios';
 import debug from 'debug';
 
-const axiosDebug = debug('axios');
+const logAxios = debug('page-loader:axios');
 
-axios.interceptors.request.use((config) => {
-  axiosDebug('Request: %O', config);
-  return config;
+axios.interceptors.request.use(request => {
+  logAxios(`Request: ${request.method.toUpperCase()} ${request.url}`);
+  return request;
 });
 
-axios.interceptors.response.use(
-  (response) => {
-    axiosDebug('Response: %O', response);
-    return response;
-  },
-  (error) => {
-    axiosDebug('Error: %O', error);
-    return Promise.reject(error);
-  }
-);
-
-export default axios;
+axios.interceptors.response.use(response => {
+  logAxios(`Response: ${response.status} ${response.config.url}`);
+  return response;
+}, error => {
+  logAxios(`Error: ${error.response ? error.response.status : 'No response'} ${error.config.url}`);
+  return Promise.reject(error);
+});

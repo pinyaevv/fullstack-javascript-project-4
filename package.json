@@ -14,9 +14,11 @@
     "page-loader": "bin/page-loader.js"
   },
   "dependencies": {
-    "axios": "^1.7.7",
+    "axios": "^1.7.9",
+    "axios-debug-log": "^1.0.0",
     "cheerio": "^1.0.0",
     "commander": "^12.1.0",
+    "debug": "^4.4.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

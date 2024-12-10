@@ -1,7 +1,10 @@
-import axios from './debug/debug-axios.js';
+import axios from '../debug/debug-axios.js';
 import fs from 'fs/promises';
 import path from 'path';
 import * as cheerio from 'cheerio';
+import debug from 'debug';
+
+const recLog = debug('page-loader');
 
 const generateFileName = (resourceUrl) => {
   const ext = path.extname(resourceUrl) || '.html';
@@ -16,32 +19,31 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
   const fullUrl = new URL(resourceUrl, baseUrl).toString();
   const fileName = generateFileName(resourceUrl);
   const filePath = path.join(outputDir, fileName);
+  recLog('Generated file path for resource:', filePath);
 
   return axios
     .get(fullUrl, { responseType: 'arraybuffer' })
     .then((response) => {
       if (response.status !== 200) {
-        console.warn(`Resource ${fullUrl} not found, status code: ${response.status}`);
+        recLog('Resource not found:', fullUrl, response.status);
         return;
       }
 
       return fs.writeFile(filePath, response.data).then(() => {
         const relativePath = path.posix.join(path.basename(outputDir), fileName);
         $(element).attr(attr, relativePath);
-        console.log(`Resource downloaded: ${fullUrl}`);
+        recLog('Resource downloaded', fullUrl);
       });
     })
-    .catch((err) => {
-      console.error(`Error downloading resource ${fullUrl}: ${err.message}`);
-    });
 };
 
 const downloadPage = (url, outputDir) => {
-  console.log(`Started downloading page: ${url}`);
+  recLog('Started downloading page', url);
   return axios
     .get(url)
     .then((response) => {
       const pageContent = response.data;
+      recLog('Received data from server', pageContent.length);
       const $ = cheerio.load(pageContent);
 
       const dirName = url
@@ -53,6 +55,7 @@ const downloadPage = (url, outputDir) => {
       return fs
         .mkdir(resourcesDir, { recursive: true })
         .then(() => {
+          recLog('Created resources directory:', resourcesDir);
           const downloadPromises = [];
 
           $('link[href], script[src], img[src]').each((_, element) => {
@@ -65,20 +68,21 @@ const downloadPage = (url, outputDir) => {
               );
             }
           });
-
+          
+          recLog('Starting to download resources for page:', url);
           return Promise.all(downloadPromises).then(() => {
             const fileName = generateFileName(url);
             const filePath = path.join(outputDir, fileName);
 
             return fs.writeFile(filePath, $.html(), 'utf-8').then(() => {
-              console.log(`Page saved: ${filePath}`);
+              recLog('Page saved to:', filePath);
               return filePath;
             });
           });
         });
     })
     .catch((err) => {
-      console.error(`Error downloading page: ${err.message}`);
+      recLog('Error downloading page:', err);
       throw new Error(`Error downloading page: ${err.message}`);
     });
 };

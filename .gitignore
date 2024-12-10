@@ -9,3 +9,5 @@ package-lock.json
 coverage
 
 .DS_Store
+
+page-loader/
