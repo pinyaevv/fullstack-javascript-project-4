@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+import * as fs from 'fs/promises';
 import debug from 'debug';
 import path, { dirname } from 'path';
 import nock from 'nock';
@@ -62,7 +62,7 @@ test('download page and save it', async () => {
       const fileData = await fs.readFile(filePath, 'utf-8');
       expect(fileData).toBe(dataExpected);
     } catch (error) {
-      console.log('Ошибка при скачивании файла courses:', error);
+      console.error('Ошибка при скачивании файла courses:', error);
     }
     
 });
@@ -108,6 +108,50 @@ test('download page, image and other resource', async () => {
   const updatedHtml = await fs.readFile(filePath, 'utf-8');
   expect(updatedHtml).toContain('ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png');
   } catch (error) {
-    console.log('Ошибка при скачивании файла:', error);
+    console.error('Ошибка при скачивании файла:', error);
   }
+});
+
+test ('handles HTTP error response (404)', async () => {
+  const url = 'https://ru.hexlet.io/notfound';
+
+  nock('https://ru.hexlet.io')
+    .get('/notfound')
+    .reply(404);
+
+  await expect(downloadPage(url, tempDir)).rejects.toThrow('Failed to download resource');
+});
+
+test('handles file system error (permission denied)', async () => {
+  const url = 'https://ru.hexlet.io';
+  
+  jest.spyOn(fs, 'writeFile').mockImplementation(() => {
+    throw new Error('EACCES: permission denied');
+  });
+
+  await expect(downloadPage(url, tempDir)).rejects.toThrow('EACCES: permission denied');
+});
+
+test('handles directory creation error', async () => {
+  const url = 'https://ru.hexlet.io';
+  const errorMessage = 'EACCES: permission denied, mkdir';
+
+  jest.spyOn(fs, 'mkdir').mockImplementation(() => {
+    throw new Error(errorMessage);
+  });
+
+  await expect(downloadPage(url, tempDir)).rejects.toThrow(errorMessage);
+
+  expect(fs.mkdir).toHaveBeenCalled();
+});
+
+
+test('handles network error', async () => {
+  const url = 'https://ru.hexlet.io';
+
+  nock('https://ru.hexlet.io')
+    .get('/')
+    .replyWithError('Network error');
+
+  await expect(downloadPage(url, tempDir)).rejects.toThrow('Network error');
 });

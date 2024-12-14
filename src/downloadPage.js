@@ -25,20 +25,28 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
     .get(fullUrl, { responseType: 'arraybuffer' })
     .then((response) => {
       if (response.status !== 200) {
+        console.error(`Failed to download resource: ${fullUrl} whith status: ${response.status}`);
         return;
       }
 
-      return fs.writeFile(filePath, response.data).then(() => {
+      return fs.writeFile(filePath, response.data)
+      .then(() => {
         const relativePath = path.posix.join(path.basename(outputDir), fileName);
         $(element).attr(attr, relativePath);
+      })
+      .catch((err) => {
+        console.error(`Error writing resource to file: ${filePath}, ${err.message}`);
+        process.exit(1);
       });
     })
+    .catch((err) => {
+      console.error(`Error downloading resource: ${fullUrl}, ${err.message}`);
+      process.exit(1);
+    });
 };
 
 const downloadPage = (url, outputDir) => {
-  console.log('Debug logging started');
   recLog('Started downloading page', url);
-  console.log('Debug logging ended');
   return axios
     .get(url)
     .then((response) => {
@@ -81,7 +89,8 @@ const downloadPage = (url, outputDir) => {
         });
     })
     .catch((err) => {
-      throw new Error(`Error downloading page: ${err.message}`);
+      console.error(`Error downloading page: ${err.message}`);
+      process.exit(2);
     });
 };
 
