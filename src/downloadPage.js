@@ -25,8 +25,9 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
     .get(fullUrl, { responseType: 'arraybuffer' })
     .then((response) => {
       if (response.status !== 200) {
-        console.error(`Failed to download resource: ${fullUrl} whith status: ${response.status}`);
-        return;
+        const errorMessage = `Failed to download resource: ${fullUrl} with status: ${response.status}`;
+        console.error(errorMessage);
+        process.exit(1);
       }
 
       return fs.writeFile(filePath, response.data)
@@ -35,17 +36,20 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
         $(element).attr(attr, relativePath);
       })
       .catch((err) => {
-        console.error(`Error writing resource to file: ${filePath}, ${err.message}`);
+        const errorMessage = `Error writing resource to file: ${filePath}, ${err.message}`;
+        console.error(errorMessage);
         process.exit(1);
       });
     })
     .catch((err) => {
-      console.error(`Error downloading resource: ${fullUrl}, ${err.message}`);
+      const errorMessage = `Error downloading resource: ${fullUrl}, ${err.message}`;
+      console.error(errorMessage);
       process.exit(1);
     });
 };
 
 const downloadPage = (url, outputDir) => {
+  console.log('Inside downloadPage: tempDir:', outputDir);
   recLog('Started downloading page', url);
   return axios
     .get(url)
@@ -59,6 +63,7 @@ const downloadPage = (url, outputDir) => {
         .replace(/[^a-zA-Z0-9]/g, '-')
         .concat('_files');
       const resourcesDir = path.join(outputDir, dirName);
+      console.log('File path in downloadPage:', resourcesDir);
 
       return fs
         .mkdir(resourcesDir, { recursive: true })
@@ -79,6 +84,7 @@ const downloadPage = (url, outputDir) => {
           recLog('Starting to download resources for page:', url);
           return Promise.all(downloadPromises).then(() => {
             const htmlFileName = generateFileName(url);
+            console.log(htmlFileName);
             const htmlFilePath = path.join(outputDir, 'page-loader', htmlFileName);
 
             return fs.writeFile(htmlFilePath, $.html(), 'utf-8').then(() => {
@@ -89,8 +95,9 @@ const downloadPage = (url, outputDir) => {
         });
     })
     .catch((err) => {
-      console.error(`Error downloading page: ${err.message}`);
-      process.exit(2);
+      const errorMessage = `Error downloading page: ${err.message}`;
+      console.error(errorMessage);
+      process.exit(1);
     });
 };
 

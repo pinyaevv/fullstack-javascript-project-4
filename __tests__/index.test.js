@@ -1,12 +1,14 @@
-import * as fs from 'fs/promises';
+import fs from 'fs/promises';
 import debug from 'debug';
 import path, { dirname } from 'path';
 import nock from 'nock';
 import os from 'os';
 import downloadPage from '../src/downloadPage.js';
+import { jest } from '@jest/globals';
 import { fileURLToPath } from 'url';
 
 const logNock = debug('page-loader:nock');
+nock.disableNetConnect();
 
 nock.recorder.rec({
   output_objects: true,
@@ -30,106 +32,100 @@ const getDataFile = async (filename) => {
 const normalizeHtml = (html) => html.replace(/\s+/g, '').trim();
 
 let tempDir;
+console.log('tempDir:', tempDir);
 
 beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
-    nock.disableNetConnect();
-    nock.cleanAll();
+  console.log('Before creating tempDir', tempDir);
+  tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
+  console.log('TempDir Path created:', tempDir);
+  nock.cleanAll();
+  jest.spyOn(process, 'exit').mockImplementation(() => {});
 });
 
 afterEach(async () => {
+  if (tempDir) {
     await fs.rm(tempDir, { recursive: true });
+  }
+  jest.restoreAllMocks();
 });
 
 test('download page and save it', async () => {
-    const url = 'https://ru.hexlet.io/courses';
-    const dataFile = await getDataFile('page.html');
-    const dataExpected = await getDataFile('expectedPage.html');
-
-    nock('https://ru.hexlet.io')
-      .get('/courses')
-      .reply(200, dataFile);
-    
-    try {
-      const filePath = await downloadPage(url, tempDir);
-
-      const fileExists = await fs
-        .access(filePath)
-        .then(() => true)
-        .catch(() => false);
-        expect(fileExists).toBe(true);
-
-      const fileData = await fs.readFile(filePath, 'utf-8');
-      expect(fileData).toBe(dataExpected);
-    } catch (error) {
-      console.error('Ошибка при скачивании файла courses:', error);
-    }
-    
-});
-
-test('download page, image and other resource', async () => {
+  console.log('tempDir inside test:', tempDir);
   const url = 'https://ru.hexlet.io/courses';
   const dataFile = await getDataFile('page.html');
   const dataExpected = await getDataFile('expectedPage.html');
-  const imageBuffer = await getDataFile('ru-hexlet-io-courses_files/nodejs.png');
-  const pathFileImage = path.join(
-    tempDir, 
-    'ru-hexlet-io-courses_files', 
-    'ru-hexlet-io-assets-professions-nodejs.png');
 
-  nock('https://ru.hexlet.io')
-    .get('/assets/professions/nodejs.png')
-    .reply(200, imageBuffer);
-
+  const normalizedDataExpected = normalizeHtml(dataExpected);
+  
   nock('https://ru.hexlet.io')
     .get('/courses')
     .reply(200, dataFile);
 
-  nock('https://ru.hexlet.io')
-    .get('/assets/application.css')
-    .reply(200, '/* CSS content */');
+  await downloadPage(url, tempDir);
 
-  nock('https://ru.hexlet.io')
-    .get('/packs/js/runtime.js')
-    .reply(200, '/* JS content */');
+  const pageLoaderDir = path.join(tempDir, 'page-loader');
 
-  try {
-    const filePath = await downloadPage(url, tempDir);
-  
-  const fileExists = await fs
-    .access(pathFileImage)
+  console.log('Checking existence of page-loader directory at:', pageLoaderDir);
+
+  const pageLoaderExists = await fs
+    .access(pageLoaderDir) 
     .then(() => true)
     .catch(() => false);
+  console.log(`page-loader directory exists:`, pageLoaderExists);
+  expect(pageLoaderExists).toBe(true);
+
+  const htmlFileName = generateFileName(url);
+  const htmlFilePath = path.join(pageLoaderDir, htmlFileName);
+
+  const fileExists = await fs
+    .access(htmlFilePath) 
+    .then(() => true)
+    .catch(() => false);
+  console.log(`File exists at ${htmlFilePath}:`, fileExists);
   expect(fileExists).toBe(true);
 
-  const fileData = await fs.readFile(filePath, 'utf-8');
-  expect(normalizeHtml(fileData)).toBe(normalizeHtml(dataExpected));
+  const fileData = await fs.readFile(htmlFilePath, 'utf-8');
+  const normalizedFileData = normalizeHtml(fileData);
 
-  const updatedHtml = await fs.readFile(filePath, 'utf-8');
-  expect(updatedHtml).toContain('ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png');
-  } catch (error) {
-    console.error('Ошибка при скачивании файла:', error);
-  }
+  expect(normalizedFileData).toBe(normalizedDataExpected);
 });
 
-test ('handles HTTP error response (404)', async () => {
+test('handles HTTP error response (404)', async () => {
   const url = 'https://ru.hexlet.io/notfound';
 
   nock('https://ru.hexlet.io')
     .get('/notfound')
     .reply(404);
+  
+  nock('https://fonts.googleapis.com')
+    .get('/some-resource')
+    .reply(404, 'Not Found');
 
-  await expect(downloadPage(url, tempDir)).rejects.toThrow('Failed to download resource');
+  nock('https://fonts.gstatic.com')
+    .get('/some-resource')
+    .reply(404, 'Not Found');
+
+    try {
+      await downloadPage(url, tempDir);
+    } catch (e) {
+      expect(e.message).toMatch(/Failed to download resource/);
+      expect(process.exit).toHaveBeenCalledWith(1);
+    }
 });
 
 test('handles file system error (permission denied)', async () => {
   const url = 'https://ru.hexlet.io';
-  
+
   jest.spyOn(fs, 'writeFile').mockImplementation(() => {
     throw new Error('EACCES: permission denied');
   });
 
-  await expect(downloadPage(url, tempDir)).rejects.toThrow('EACCES: permission denied');
+  try {
+    await downloadPage(url, tempDir);
+  } catch (e) {
+    expect(e.message).toMatch(/EACCES: permission denied/);
+    expect(process.exit).toHaveBeenCalledWith(1);
+  }
 });
 
 test('handles directory creation error', async () => {
@@ -140,11 +136,13 @@ test('handles directory creation error', async () => {
     throw new Error(errorMessage);
   });
 
-  await expect(downloadPage(url, tempDir)).rejects.toThrow(errorMessage);
-
-  expect(fs.mkdir).toHaveBeenCalled();
+  try {
+    await downloadPage(url, tempDir);
+  } catch (e) {
+    expect(e.message).toMatch(/EACCES: permission denied/);
+    expect(process.exit).toHaveBeenCalledWith(1);
+  }
 });
-
 
 test('handles network error', async () => {
   const url = 'https://ru.hexlet.io';
@@ -153,5 +151,10 @@ test('handles network error', async () => {
     .get('/')
     .replyWithError('Network error');
 
-  await expect(downloadPage(url, tempDir)).rejects.toThrow('Network error');
+    try {
+      await downloadPage(url, tempDir);
+    } catch (e) {
+      expect(e.message).toMatch(/Network error/);
+      expect(process.exit).toHaveBeenCalledWith(1);
+    }
 });

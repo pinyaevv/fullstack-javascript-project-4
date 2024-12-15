@@ -2,7 +2,7 @@
   "name": "@hexlet/code",
   "type": "module",
   "version": "1.0.0",
-  "description": "page loader",
+  "description": "Page loader",
   "main": "index.js",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
