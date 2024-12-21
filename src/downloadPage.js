@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import * as cheerio from 'cheerio';
 import debug from 'debug';
+import Listr from 'listr';
 
 const recLog = debug('page-loader');
 
@@ -34,6 +35,7 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
       .then(() => {
         const relativePath = path.posix.join(path.basename(outputDir), fileName);
         $(element).attr(attr, relativePath);
+        recLog(`Resource saved: ${filePath}`);
       })
       .catch((err) => {
         const errorMessage = `Error writing resource to file: ${filePath}, ${err.message}`;
@@ -43,13 +45,12 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
     })
     .catch((err) => {
       const errorMessage = `Error downloading resource: ${fullUrl}, ${err.message}`;
-      console.error(errorMessage);
+      errorLog(errorMessage);
       process.exit(1);
     });
 };
 
 const downloadPage = (url, outputDir) => {
-  console.log('Inside downloadPage: tempDir:', outputDir);
   recLog('Started downloading page', url);
   return axios
     .get(url)
@@ -63,33 +64,45 @@ const downloadPage = (url, outputDir) => {
         .replace(/[^a-zA-Z0-9]/g, '-')
         .concat('_files');
       const resourcesDir = path.join(outputDir, dirName);
-      console.log('File path in downloadPage:', resourcesDir);
 
       return fs
         .mkdir(resourcesDir, { recursive: true })
         .then(() => {
-          const downloadPromises = [];
+          const downloadTasks = [];
 
           $('link[href], script[src], img[src]').each((_, element) => {
             const attr = $(element).is('link') || $(element).is('script') ? 'href' : 'src';
             const resourceUrl = $(element).attr(attr);
 
             if (resourceUrl) {
-              downloadPromises.push(
-                downloadResource(url, resourcesDir, resourceUrl, element, attr, $)
-              );
+              const task = {
+                title: `Downloading: ${resourceUrl}`,
+                task: () => downloadResource(url, resourcesDir, resourceUrl, element, attr, $)
+                .catch((err) => {
+                  console.error(`Error downloading resource: ${resourceUrl}, ${err.message}`);
+                }),
+              };
+              downloadTasks.push(task);
             }
           });
 
+          const tasks = new Listr(downloadTasks, {
+            concurrent: true,
+            exitOnError: true,
+          });
+
           recLog('Starting to download resources for page:', url);
-          return Promise.all(downloadPromises).then(() => {
+          return tasks.run().then(() => {
             const htmlFileName = generateFileName(url);
-            console.log(htmlFileName);
             const htmlFilePath = path.join(outputDir, 'page-loader', htmlFileName);
 
-            return fs.writeFile(htmlFilePath, $.html(), 'utf-8').then(() => {
-              recLog('Page saved to:', htmlFilePath);
-              return htmlFilePath;
+            const dirPath = path.dirname(htmlFilePath);
+
+            return fs.mkdir(dirPath, { recursive: true }).then(() => {
+              return fs.writeFile(htmlFilePath, $.html(), 'utf-8').then(() => {
+                recLog('Page saved to:', htmlFilePath);
+                return htmlFilePath;
+              });
             });
           });
         });

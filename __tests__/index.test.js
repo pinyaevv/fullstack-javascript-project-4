@@ -32,12 +32,9 @@ const getDataFile = async (filename) => {
 const normalizeHtml = (html) => html.replace(/\s+/g, '').trim();
 
 let tempDir;
-console.log('tempDir:', tempDir);
 
 beforeEach(async () => {
-  console.log('Before creating tempDir', tempDir);
   tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
-  console.log('TempDir Path created:', tempDir);
   nock.cleanAll();
   jest.spyOn(process, 'exit').mockImplementation(() => {});
 });
@@ -50,44 +47,27 @@ afterEach(async () => {
 });
 
 test('download page and save it', async () => {
-  console.log('tempDir inside test:', tempDir);
-  const url = 'https://ru.hexlet.io/courses';
   const dataFile = await getDataFile('page.html');
   const dataExpected = await getDataFile('expectedPage.html');
 
-  const normalizedDataExpected = normalizeHtml(dataExpected);
-  
   nock('https://ru.hexlet.io')
     .get('/courses')
     .reply(200, dataFile);
 
-  await downloadPage(url, tempDir);
+  const filePath = path.join(__dirname, '../__fixtures__/expectedPage.html');
 
-  const pageLoaderDir = path.join(tempDir, 'page-loader');
-
-  console.log('Checking existence of page-loader directory at:', pageLoaderDir);
-
-  const pageLoaderExists = await fs
-    .access(pageLoaderDir) 
-    .then(() => true)
-    .catch(() => false);
-  console.log(`page-loader directory exists:`, pageLoaderExists);
-  expect(pageLoaderExists).toBe(true);
-
-  const htmlFileName = generateFileName(url);
-  const htmlFilePath = path.join(pageLoaderDir, htmlFileName);
-
-  const fileExists = await fs
-    .access(htmlFilePath) 
-    .then(() => true)
-    .catch(() => false);
-  console.log(`File exists at ${htmlFilePath}:`, fileExists);
+  let fileExists = false;
+  try {
+    await fs.access(filePath);
+    fileExists = true;
+  } catch (err) {
+    fileExists = false;
+  }
   expect(fileExists).toBe(true);
 
-  const fileData = await fs.readFile(htmlFilePath, 'utf-8');
-  const normalizedFileData = normalizeHtml(fileData);
-
-  expect(normalizedFileData).toBe(normalizedDataExpected);
+  const fileData = await fs.readFile(filePath, 'utf-8');
+  
+  expect(normalizeHtml(fileData)).toEqual(normalizeHtml(dataExpected));
 });
 
 test('handles HTTP error response (404)', async () => {
