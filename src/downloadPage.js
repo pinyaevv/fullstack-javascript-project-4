@@ -17,7 +17,19 @@ const generateFileName = (resourceUrl) => {
   return `${encodeURIComponent(baseName)}${ext}`;
 };
 
+const isLocalResource = (baseUrl, resourceUrl) => {
+  const baseHost = new URL(baseUrl).host;
+  const resourceHost = new URL(resourceUrl, baseUrl).host;
+
+  return baseHost === resourceHost;
+};
+
 const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => {
+  if (!isLocalResource(baseUrl, resourceUrl)) {
+    recLog(`Skipping resource: ${resourceUrl} (not local)`);
+    return Promise.resolve();
+  }
+
   const fullUrl = new URL(resourceUrl, baseUrl).toString();
   const fileName = generateFileName(resourceUrl);
   const filePath = path.join(outputDir, fileName);
@@ -32,16 +44,16 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
       }
 
       return fs.writeFile(filePath, response.data)
-      .then(() => {
-        const relativePath = path.posix.join(path.basename(outputDir), fileName);
-        $(element).attr(attr, relativePath);
-        recLog(`Resource saved: ${filePath}`);
-      })
-      .catch((err) => {
-        const errorMessage = `Error writing resource to file: ${filePath}, ${err.message}`;
-        console.error(errorMessage);
-        process.exit(1);
-      });
+        .then(() => {
+          const relativePath = path.posix.join(path.basename(outputDir), fileName);
+          $(element).attr(attr, relativePath);
+          recLog(`Resource saved: ${filePath}`);
+        })
+        .catch((err) => {
+          const errorMessage = `Error writing resource to file: ${filePath}, ${err.message}`;
+          console.error(errorMessage);
+          process.exit(1);
+        });
     })
     .catch((err) => {
       const errorMessage = `Error downloading resource: ${fullUrl}, ${err.message}`;
@@ -78,9 +90,9 @@ const downloadPage = (url, outputDir) => {
               const task = {
                 title: `Downloading: ${resourceUrl}`,
                 task: () => downloadResource(url, resourcesDir, resourceUrl, element, attr, $)
-                .catch((err) => {
-                  console.error(`Error downloading resource: ${resourceUrl}, ${err.message}`);
-                }),
+                  .catch((err) => {
+                    console.error(`Error downloading resource: ${resourceUrl}, ${err.message}`);
+                  }),
               };
               downloadTasks.push(task);
             }
