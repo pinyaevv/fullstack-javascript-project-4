@@ -17,9 +17,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install
-      - run: npm test
+          cache: 'npm'
+      - run: make install
+      - run: make lint
+      - run: make test
+
+      - name: Send coverage to CodeClimate
+        if: success()
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        run: |
+          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > /tmp/codeclimate-test-reporter
+          chmod +x /tmp/codeclimate-test-reporter
+          /tmp/codeclimate-test-reporter before-build
+          npm test
+          /tmp/codeclimate-test-reporter after-build --coverage-input-type test-reporter --coverage-file coverage/codeclimate-test-reporter.json

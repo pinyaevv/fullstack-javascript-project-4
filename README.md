@@ -3,3 +3,21 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/57add9612d5a154924c9/maintainability)](https://codeclimate.com/github/pinyaevv/fullstack-javascript-project-4/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/57add9612d5a154924c9/test_coverage)](https://codeclimate.com/github/pinyaevv/fullstack-javascript-project-4/test_coverage)
 [![Node CI](https://github.com/pinyaevv/fullstack-javascript-project-4/actions/workflows/nodejs.yml/badge.svg)](https://github.com/pinyaevv/fullstack-javascript-project-4/actions/workflows/nodejs.yml)
+
+# PageLoader
+
+PageLoader is a command-line utility that downloads web pages from the internet and saves them locally on your computer. Along with the page, it downloads all the associated resources (images, styles, and JavaScript files), allowing you to open the page offline.
+
+The utility works in the same way as browsers save pages (did you know they can do that?).
+
+## Features
+
+- Downloads a webpage and its resources (CSS, JS, images, etc.).
+- Saves the page locally, enabling offline viewing.
+- Displays download progress for each resource in the terminal.
+- Parallel resource downloading for faster performance.
+
+## Example Usage
+
+```bash
+page-loader --output <output-directory> <page-url>

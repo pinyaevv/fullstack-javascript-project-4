@@ -45,7 +45,7 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
     })
     .catch((err) => {
       const errorMessage = `Error downloading resource: ${fullUrl}, ${err.message}`;
-      errorLog(errorMessage);
+      console.error(errorMessage);
       process.exit(1);
     });
 };

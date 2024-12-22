@@ -61,6 +61,7 @@ test('download page and save it', async () => {
     await fs.access(filePath);
     fileExists = true;
   } catch (err) {
+    console.error('Error checking file existence:', err);
     fileExists = false;
   }
   expect(fileExists).toBe(true);
