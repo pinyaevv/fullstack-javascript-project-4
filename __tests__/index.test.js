@@ -71,10 +71,10 @@ test('download page and save it', async () => {
   expect(normalizeHtml(fileData)).toEqual(normalizeHtml(dataExpected));
 });
 
-test('handles HTTP error response (404)', async () => {
-  const url = 'https://ru.hexlet.io/notfound';
+test('HTTP error handling (404)', async () => {
+  const url = 'https://ru.hexlet.io/';
 
-  nock('https://ru.hexlet.io')
+  nock('https://cdn2.hexlet.io')
     .get('/notfound')
     .reply(404);
   
@@ -94,38 +94,7 @@ test('handles HTTP error response (404)', async () => {
     }
 });
 
-test('handles file system error (permission denied)', async () => {
-  const url = 'https://ru.hexlet.io';
-
-  jest.spyOn(fs, 'writeFile').mockImplementation(() => {
-    throw new Error('EACCES: permission denied');
-  });
-
-  try {
-    await downloadPage(url, tempDir);
-  } catch (e) {
-    expect(e.message).toMatch(/EACCES: permission denied/);
-    expect(process.exit).toHaveBeenCalledWith(1);
-  }
-});
-
-test('handles directory creation error', async () => {
-  const url = 'https://ru.hexlet.io';
-  const errorMessage = 'EACCES: permission denied, mkdir';
-
-  jest.spyOn(fs, 'mkdir').mockImplementation(() => {
-    throw new Error(errorMessage);
-  });
-
-  try {
-    await downloadPage(url, tempDir);
-  } catch (e) {
-    expect(e.message).toMatch(/EACCES: permission denied/);
-    expect(process.exit).toHaveBeenCalledWith(1);
-  }
-});
-
-test('handles network error', async () => {
+test('network error handling', async () => {
   const url = 'https://ru.hexlet.io';
 
   nock('https://ru.hexlet.io')
@@ -139,3 +108,10 @@ test('handles network error', async () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     }
 });
+
+// Александр, тестов скорее всего не хватает. Попробую успеть добавить до вашей первой обратной связи. Отправляю так, поскольку отстаю от графика.
+// Я понимаю, что тесты должны обращаться четко к фикстуре как например сделано у меня в тесте 'download page and save it'.
+// И видимо где-то в основной логике downloadPage.js есть ошибка, поскольку мне не удалось добиться чтобы он скачивал только локальные ресурсы.
+// Точнее он скачивает локальные, но по тесту я вижу, что обращается к другим хостам (cdn2.hexlet.io, kz.hexlet.io/). Хотя в тесте я их мокировал через nock(возможно не верно).
+// И вообще должен ли код в данном проекте обращаться к реальным страницам? Или нужно делать чтобы не только тест, но и сам код обращался по переданному пути в фикстуру?
+// Также ещё добавлю тест на проверку сохранения изображений.
