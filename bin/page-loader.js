@@ -15,8 +15,8 @@ program
       .then((filePath) => {
         console.log(`Page was successfully download into ${filePath}`);
       })
-      .catch((err) => {
-        console.error(`Error: ${err.message}`);
+      .catch(() => {
+        process.exit(1);
       });
   });
 

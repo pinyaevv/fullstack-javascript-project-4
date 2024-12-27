@@ -17,7 +17,28 @@ The utility works in the same way as browsers save pages (did you know they can 
 - Displays download progress for each resource in the terminal.
 - Parallel resource downloading for faster performance.
 
+## Installation
+
+To install the PageLoader utility, follow these steps:
+ 
+1) Clone the repository:
+
+git clone git@github.com:pinyaevv/fullstack-javascript-project-4.git
+cd fullstack-javascript-project-4
+
+2) To install the required dependencies, run:
+
+npm install
+
+3) Run the application:
+You can now use the page-loader utility
+
+page-loader --output <output-directory> <page-url>
+
+4) Tests:
+
+make test
+
 ## Example Usage
 
-```bash
-page-loader --output <output-directory> <page-url>
+[![asciicast](https://asciinema.org/a/jrilD5QGOjnAI2fhoLBFPKkXn.svg)](https://asciinema.org/a/jrilD5QGOjnAI2fhoLBFPKkXn)

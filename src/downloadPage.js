@@ -17,19 +17,7 @@ const generateFileName = (resourceUrl) => {
   return `${encodeURIComponent(baseName)}${ext}`;
 };
 
-const isLocalResource = (baseUrl, resourceUrl) => {
-  const baseHost = new URL(baseUrl).host;
-  const resourceHost = new URL(resourceUrl, baseUrl).host;
-
-  return baseHost === resourceHost;
-};
-
 const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => {
-  if (!isLocalResource(baseUrl, resourceUrl)) {
-    recLog(`Skipping resource: ${resourceUrl} (not local)`);
-    return Promise.resolve();
-  }
-
   const fullUrl = new URL(resourceUrl, baseUrl).toString();
   const fileName = generateFileName(resourceUrl);
   const filePath = path.join(outputDir, fileName);
@@ -106,7 +94,7 @@ const downloadPage = (url, outputDir) => {
           recLog('Starting to download resources for page:', url);
           return tasks.run().then(() => {
             const htmlFileName = generateFileName(url);
-            const htmlFilePath = path.join(outputDir, 'page-loader', htmlFileName);
+            const htmlFilePath = path.join(outputDir, htmlFileName);
 
             const dirPath = path.dirname(htmlFilePath);
 
