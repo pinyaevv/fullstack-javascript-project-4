@@ -2,6 +2,7 @@
 
 import { program } from 'commander';
 import downloadPage from '../index.js';
+import path from 'path';
 
 program
   .name('page-loader')
@@ -10,12 +11,14 @@ program
   .option('-o, --output [dir]', 'output dir', process.cwd())
   .argument('<url>', 'URL to download')
   .action((url, options) => {
-    const outputDir = options.output || process.cwd();
+    const outputDir = path.resolve(options.output);
     downloadPage(url, outputDir)
       .then((filePath) => {
         console.log(`Page was successfully download into ${filePath}`);
       })
-      .catch(() => {
+      .catch((err) => {
+        const errorMessage = `Error downloading page: ${err.message}`;
+        console.error(errorMessage);
         process.exit(1);
       });
   });

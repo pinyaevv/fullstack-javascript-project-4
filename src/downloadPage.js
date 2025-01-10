@@ -17,10 +17,11 @@ const generateFileName = (resourceUrl) => {
   return `${encodeURIComponent(baseName)}${ext}`;
 };
 
-const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => {
+const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, resourcesDir) => {
   const fullUrl = new URL(resourceUrl, baseUrl).toString();
   const fileName = generateFileName(resourceUrl);
-  const filePath = path.join(outputDir, fileName);
+  const isHtml = path.extname(fileName) === '.html';
+  const filePath = isHtml ? path.join(outputDir, fileName) : path.join(resourcesDir, fileName);
 
   return axios
     .get(fullUrl, { responseType: 'arraybuffer' })
@@ -33,7 +34,9 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
 
       return fs.writeFile(filePath, response.data)
         .then(() => {
-          const relativePath = path.posix.join(path.basename(outputDir), fileName);
+          const relativePath = isHtml
+            ? fileName
+            : path.posix.join(path.basename(resourcesDir), fileName);
           $(element).attr(attr, relativePath);
           recLog(`Resource saved: ${filePath}`);
         })
@@ -50,7 +53,7 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $) => 
     });
 };
 
-const downloadPage = (url, outputDir) => {
+const downloadPage = (url, outputDir = '') => {
   recLog('Started downloading page', url);
   return axios
     .get(url)
@@ -65,19 +68,26 @@ const downloadPage = (url, outputDir) => {
         .concat('_files');
       const resourcesDir = path.join(outputDir, dirName);
 
-      return fs
-        .mkdir(resourcesDir, { recursive: true })
+      return fs.access(resourcesDir)
+        .catch(() => { return fs.mkdir(resourcesDir, { recursive: true }) })
         .then(() => {
           const downloadTasks = [];
+          const pageOrigin = new URL(url).origin;
 
           $('link[href], script[src], img[src]').each((_, element) => {
             const attr = $(element).is('link') || $(element).is('script') ? 'href' : 'src';
             const resourceUrl = $(element).attr(attr);
 
-            if (resourceUrl) {
+            if (!resourceUrl) {
+              return;
+            };
+
+            const fullUrl = new URL(resourceUrl, url).toString();
+
+            if (fullUrl.startsWith(pageOrigin)) {
               const task = {
                 title: `Downloading: ${resourceUrl}`,
-                task: () => downloadResource(url, resourcesDir, resourceUrl, element, attr, $)
+                task: () => downloadResource(url, outputDir, resourceUrl, element, attr, $, resourcesDir)
                   .catch((err) => {
                     console.error(`Error downloading resource: ${resourceUrl}, ${err.message}`);
                   }),
@@ -88,29 +98,21 @@ const downloadPage = (url, outputDir) => {
 
           const tasks = new Listr(downloadTasks, {
             concurrent: true,
-            exitOnError: true,
+            exitOnError: false,
           });
 
           recLog('Starting to download resources for page:', url);
-          return tasks.run().then(() => {
-            const htmlFileName = generateFileName(url);
-            const htmlFilePath = path.join(outputDir, htmlFileName);
+          return tasks.run()
+        })
+        .then(() => {
+          const htmlFileName = generateFileName(url);
+          const htmlFilePath = path.join(outputDir, htmlFileName);
 
-            const dirPath = path.dirname(htmlFilePath);
-
-            return fs.mkdir(dirPath, { recursive: true }).then(() => {
-              return fs.writeFile(htmlFilePath, $.html(), 'utf-8').then(() => {
-                recLog('Page saved to:', htmlFilePath);
-                return htmlFilePath;
-              });
-            });
+          return fs.writeFile(htmlFilePath, $.html(), 'utf-8').then(() => {
+            recLog('Page saved to:', htmlFilePath);
+            return htmlFilePath;
           });
         });
-    })
-    .catch((err) => {
-      const errorMessage = `Error downloading page: ${err.message}`;
-      console.error(errorMessage);
-      process.exit(1);
     });
 };
 
