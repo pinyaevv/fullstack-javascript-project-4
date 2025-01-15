@@ -12,10 +12,18 @@ const generateFileName = (resourceUrl) => {
   const baseName = resourceUrl
     .replace(/^https?:\/\//, '')
     .replace(/[^a-zA-Z0-9]/g, '-')
-    .replace(/^-/, '')
-    .replace(/-$/, '');
+    .replace(/^-+|-+$/g, '');
+
   return `${encodeURIComponent(baseName)}${ext}`;
 };
+
+// Александр, на данный момент вроде все работает, но выдаёт новую ошибку - https://github.com/pinyaevv/fullstack-javascript-project-4/actions/runs/12789585482/job/35653341807#step:3:181
+// Я опять попробовал загружать различные ресурсы, иногда возникает проблема с зависшими запросами. Может проблема в этом?
+//  ✔ Downloading: /assets/photoswipe-2d378d82.css
+// ⠹ Downloading: /assets/index-31944ff4.css
+// ⠹ Downloading: /assets/favicon.ico
+// ⠹ Downloading: /assets/favicon-16x16.png
+// Толи они не успевают загружаться, толи с сервером что-то.. Я попробовал установить таймаут и ограничил параллельную загрузку до 10 задача(файлов). Но проблема не решилась.
 
 const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, resourcesDir) => {
   const fullUrl = new URL(resourceUrl, baseUrl).toString();
@@ -23,8 +31,13 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
   const isHtml = path.extname(fileName) === '.html';
   const filePath = isHtml ? path.join(outputDir, fileName) : path.join(resourcesDir, fileName);
 
+  const axiosConfig = {
+    responseType: 'arraybuffer',
+    timeout: 10000,
+  };
+
   return axios
-    .get(fullUrl, { responseType: 'arraybuffer' })
+    .get(fullUrl, axiosConfig)
     .then((response) => {
       if (response.status !== 200) {
         const errorMessage = `Failed to download resource: ${fullUrl} with status: ${response.status}`;
@@ -68,7 +81,7 @@ const downloadPage = (url, outputDir = '') => {
         .concat('_files');
       const resourcesDir = path.join(outputDir, dirName);
 
-      return fs.access(resourcesDir)
+      return fs.access(resourcesDir) // а зачем запрещать создавать папку для хранения? Т.е. по условию папка в которую мы будем загружать должна уже быть создана. Мы сами выбираем и создаём её?
         .catch(() => { return fs.mkdir(resourcesDir) })
         .then(() => {
           const downloadTasks = [];
@@ -97,7 +110,7 @@ const downloadPage = (url, outputDir = '') => {
           });
 
           const tasks = new Listr(downloadTasks, {
-            concurrent: true,
+            concurrent: 10,
             exitOnError: false,
           });
 
