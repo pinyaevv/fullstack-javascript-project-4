@@ -69,7 +69,7 @@ const downloadPage = (url, outputDir = '') => {
       const resourcesDir = path.join(outputDir, dirName);
 
       return fs.access(resourcesDir)
-        .catch(() => { return fs.mkdir(resourcesDir, { recursive: false }) })
+        .catch(() => { return fs.mkdir(resourcesDir) })
         .then(() => {
           const downloadTasks = [];
           const pageOrigin = new URL(url).origin;
