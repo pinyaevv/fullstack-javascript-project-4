@@ -104,7 +104,7 @@ test('network error handling', async () => {
     try {
       await downloadPage(url, tempDir);
     } catch (e) {
-      expect(e.message).toMatch(/Network error/);
+      expect(e.message).toMatch(/Network error while downloading resource/);
       expect(process.exit).toHaveBeenCalledWith(1);
     }
 });

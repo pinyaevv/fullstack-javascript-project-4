@@ -75,7 +75,7 @@ const downloadPage = (url, outputDir = '') => {
       const resourcesDir = path.join(outputDir, dirName);
 
       return fs.access(resourcesDir)
-        .catch(() => { return fs.mkdir(resourcesDir) })
+        .catch(() => fs.mkdir(resourcesDir))
         .then(() => {
           const downloadTasks = [];
           const pageOrigin = new URL(url).origin;
@@ -86,7 +86,7 @@ const downloadPage = (url, outputDir = '') => {
 
             if (!resourceUrl) {
               return;
-            };
+            }
 
             const fullUrl = new URL(resourceUrl, url).toString();
 
@@ -96,6 +96,7 @@ const downloadPage = (url, outputDir = '') => {
                 task: () => downloadResource(url, outputDir, resourceUrl, element, attr, $, resourcesDir)
                   .catch((err) => {
                     console.error(`Error downloading resource: ${resourceUrl}, ${err.message}`);
+                    throw err;
                   }),
               };
               downloadTasks.push(task);
@@ -108,7 +109,7 @@ const downloadPage = (url, outputDir = '') => {
           });
 
           recLog('Starting to download resources for page:', url);
-          return tasks.run()
+          return tasks.run();
         })
         .then(() => {
           const htmlFileName = generateFileName(url);
@@ -121,8 +122,7 @@ const downloadPage = (url, outputDir = '') => {
         });
     })
     .catch((err) => {
-      const errorMessage = `Failed to download page: ${url}, ${err.message}`;
-      console.error(errorMessage);
+      console.error(`Error downloading page: ${url}, ${err.message}`);
       process.exit(1);
     });
 };
