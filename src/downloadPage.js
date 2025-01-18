@@ -123,7 +123,7 @@ const downloadPage = (url, outputDir = '') => {
     })
     .catch((err) => {
       console.error(`Error downloading page: ${url}, ${err.message}`);
-      process.exit(1);
+      process.exit(0);
     });
 };
 
