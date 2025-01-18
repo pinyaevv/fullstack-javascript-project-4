@@ -36,14 +36,14 @@ let tempDir;
 beforeEach(async () => {
   tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
   nock.cleanAll();
-  jest.spyOn(process, 'exit').mockImplementation(() => {}); // Мокируем exit
+  jest.spyOn(process, 'exit').mockImplementation(() => {});
 });
 
 afterEach(async () => {
   if (tempDir) {
     await fs.rm(tempDir, { recursive: true });
   }
-  jest.restoreAllMocks(); // Восстанавливаем все моки после каждого теста
+  jest.restoreAllMocks();
 });
 
 test('download page and save it', async () => {
@@ -116,6 +116,6 @@ test('should exit with code 1 on error', async () => {
     await downloadPage(url);
   } catch (e) {
     expect(e.message).toMatch(/Failed to download page/);
-    expect(process.exit).toHaveBeenCalledWith(1);
   }
+  expect(process.exit).toHaveBeenCalledWith(1);
 });

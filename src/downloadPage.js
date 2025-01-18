@@ -128,3 +128,7 @@ const downloadPage = (url, outputDir = '') => {
 };
 
 export default downloadPage;
+
+// не понимаю, если я ставли ради теста на 126 строчке process.exit(0); то тесты Хекслета ругаются, что ошибка не выбрасывается.
+// если я оставляю process.exit(1); то тесты ругаются, что код выкидывает ошибку с кодом 1 и останавливает процесс.
+// в своих тестах я перехватываю process.exit() в beforeEach - jest.spyOn(process, 'exit').mockImplementation(() => {});
