@@ -17,9 +17,7 @@ program
         console.log(`Page was successfully download into ${filePath}`);
       })
       .catch((err) => {
-        const errorMessage = `Error downloading page: ${err.message}`;
-        console.error(errorMessage);
-        process.exit(1);
+        console.error(`Error downloading page: ${err.message}`);
       });
   });
 
