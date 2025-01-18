@@ -36,14 +36,14 @@ let tempDir;
 beforeEach(async () => {
   tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
   nock.cleanAll();
-  jest.spyOn(process, 'exit').mockImplementation(() => {});
+  jest.spyOn(process, 'exit').mockImplementation(() => {}); // Мокируем exit
 });
 
 afterEach(async () => {
   if (tempDir) {
     await fs.rm(tempDir, { recursive: true });
   }
-  jest.restoreAllMocks();
+  jest.restoreAllMocks(); // Восстанавливаем все моки после каждого теста
 });
 
 test('download page and save it', async () => {
@@ -86,12 +86,12 @@ test('HTTP error handling (404)', async () => {
     .get('/some-resource')
     .reply(404, 'Not Found');
 
-    try {
-      await downloadPage(url, tempDir);
-    } catch (e) {
-      expect(e.message).toMatch(/Failed to download resource/);
-      expect(process.exit).toHaveBeenCalledWith(1);
-    }
+  try {
+    await downloadPage(url, tempDir);
+  } catch (e) {
+    expect(e.message).toMatch(/Failed to download resource/);
+    expect(process.exit).toHaveBeenCalledWith(1);
+  }
 });
 
 test('network error handling', async () => {
@@ -101,10 +101,21 @@ test('network error handling', async () => {
     .get('/')
     .replyWithError('Network error');
 
-    try {
-      await downloadPage(url, tempDir);
-    } catch (e) {
-      expect(e.message).toMatch(/Network error while downloading resource/);
-      expect(process.exit).toHaveBeenCalledWith(1);
-    }
+  try {
+    await downloadPage(url, tempDir);
+  } catch (e) {
+    expect(e.message).toMatch(/Network error while downloading resource/);
+    expect(process.exit).toHaveBeenCalledWith(1);
+  }
+});
+
+test('should exit with code 1 on error', async () => {
+  const url = 'http://somesite';
+
+  try {
+    await downloadPage(url);
+  } catch (e) {
+    expect(e.message).toMatch(/Failed to download page/);
+    expect(process.exit).toHaveBeenCalledWith(1);
+  }
 });
