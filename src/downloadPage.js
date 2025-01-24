@@ -41,7 +41,7 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
         .then(() => {
           const relativePath = isHtml
             ? fileName
-            : path.posix.join(path.basename(resourcesDir), fileName);
+            : path.join(path.basename(resourcesDir), fileName);
           $(element).attr(attr, relativePath);
           recLog(`Resource saved: ${filePath}`);
         })
@@ -122,7 +122,7 @@ const downloadPage = (url, outputDir = '') => {
     })
     .catch((err) => {
       console.error(`Error downloading page: ${url}, ${err.message}`);
-      process.exit(1);
+      return;
     });
 };
 
