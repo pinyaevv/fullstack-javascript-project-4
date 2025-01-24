@@ -121,7 +121,7 @@ const downloadPage = (url, outputDir = '') => {
     })
     .catch((err) => {
       console.error(`Failed to download resource: ${url}, ${err.message}`);
-      return Promise.reject(err);
+      return Promise.reject(new Error(`Download failed for URL ${url}: ${err.message}`));
     });
 };
 
