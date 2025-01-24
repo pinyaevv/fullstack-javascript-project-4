@@ -120,7 +120,7 @@ const downloadPage = (url, outputDir = '') => {
     })
     .catch((err) => {
       console.error(`Error downloading page: ${url}, ${err.message}`);
-      process.exit(1);
+      return Promise.reject(new Error(err.message));
     });
 };
 
