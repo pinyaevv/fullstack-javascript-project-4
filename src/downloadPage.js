@@ -52,9 +52,8 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
         });
     })
     .catch((err) => {
-      const errorMessage = `Network error while downloading resource: ${fullUrl}, ${err.message}`;
-      console.error(errorMessage);
-      process.exit(1);
+      console.error(`Network error while downloading resource: ${fullUrl}, ${err.message}`);
+      return Promise.reject(`Network error: ${err.message}`);
     });
 };
 
@@ -122,7 +121,7 @@ const downloadPage = (url, outputDir = '') => {
     })
     .catch((err) => {
       console.error(`Error downloading page: ${url}, ${err.message}`);
-      return;
+      return Promise.reject(err);
     });
 };
 
