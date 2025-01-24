@@ -47,12 +47,12 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
         })
         .catch((err) => {
           console.error(`Error writing resource to file: ${filePath}, ${err.message}`);
-          process.exit(1);
+          return;
         });
     })
     .catch((err) => {
       console.error(`Failed to download resource: ${fullUrl}, ${err.message}`);
-      process.exit(1);
+      return;
     });
 };
 
