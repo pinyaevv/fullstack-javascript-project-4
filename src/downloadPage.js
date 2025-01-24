@@ -41,19 +41,18 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
         .then(() => {
           const relativePath = isHtml
             ? fileName
-            : path.join(path.basename(resourcesDir), fileName);
+            : path.posix.join(path.basename(resourcesDir), fileName);
           $(element).attr(attr, relativePath);
           recLog(`Resource saved: ${filePath}`);
         })
         .catch((err) => {
-          const errorMessage = `Error writing resource to file: ${filePath}, ${err.message}`;
-          console.error(errorMessage);
+          console.error(`Error writing resource to file: ${filePath}, ${err.message}`);
           process.exit(1);
         });
     })
     .catch((err) => {
       console.error(`Network error while downloading resource: ${fullUrl}, ${err.message}`);
-      return Promise.reject(`Network error: ${err.message}`);
+      process.exit(1);
     });
 };
 
@@ -121,7 +120,7 @@ const downloadPage = (url, outputDir = '') => {
     })
     .catch((err) => {
       console.error(`Error downloading page: ${url}, ${err.message}`);
-      return Promise.reject(err);
+      process.exit(1);
     });
 };
 
