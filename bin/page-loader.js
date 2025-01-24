@@ -18,6 +18,7 @@ program
       })
       .catch((err) => {
         console.error(`Error downloading page: ${err.message}`);
+        process.exit(1);
       });
   });
 

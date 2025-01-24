@@ -93,7 +93,7 @@ const downloadPage = (url, outputDir = '') => {
                 task: () => downloadResource(url, outputDir, resourceUrl, element, attr, $, resourcesDir)
                   .catch((err) => {
                     console.error(`Error downloading resource: ${resourceUrl}, ${err.message}`);
-                    throw err;
+                    return Promise.reject(new Error(`Error downloading resource: ${resourceUrl}, ${err.message}`));
                   }),
               };
               downloadTasks.push(task);
@@ -120,7 +120,7 @@ const downloadPage = (url, outputDir = '') => {
     })
     .catch((err) => {
       console.error(`Error downloading page: ${url}, ${err.message}`);
-      return Promise.reject(new Error(err.message));
+      return Promise.reject(new Error(`Download failed for URL ${url}: ${err.message}`));
     });
 };
 
