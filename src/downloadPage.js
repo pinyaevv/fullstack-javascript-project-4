@@ -47,12 +47,12 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
         })
         .catch((err) => {
           console.error(`Error writing resource to file: ${filePath}, ${err.message}`);
-          return;
+          process.exit(1);
         });
     })
     .catch((err) => {
       console.error(`Failed to download resource: ${fullUrl}, ${err.message}`);
-      return;
+      process.exit(1);
     });
 };
 
@@ -121,7 +121,7 @@ const downloadPage = (url, outputDir = '') => {
     })
     .catch((err) => {
       console.error(`Failed to download resource: ${url}, ${err.message}`);
-      return Promise.reject(new Error(`Download failed for URL ${url}: ${err.message}`));
+      return Promise.reject(err);
     });
 };
 
