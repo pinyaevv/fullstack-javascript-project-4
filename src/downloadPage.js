@@ -51,7 +51,7 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
         });
     })
     .catch((err) => {
-      console.error(`Network error while downloading resource: ${fullUrl}, ${err.message}`);
+      console.error(`Failed to download resource: ${fullUrl}, ${err.message}`);
       process.exit(1);
     });
 };
@@ -69,7 +69,8 @@ const downloadPage = (url, outputDir = '') => {
         .replace(/^https?:\/\//, '')
         .replace(/[^a-zA-Z0-9]/g, '-')
         .concat('_files');
-      const resourcesDir = path.join(outputDir, dirName);
+      const correctedDirName = dirName.replace('-_files', '_files');
+      const resourcesDir = path.join(outputDir, correctedDirName);
 
       return fs.access(resourcesDir)
         .catch(() => fs.mkdir(resourcesDir))
@@ -93,7 +94,7 @@ const downloadPage = (url, outputDir = '') => {
                 task: () => downloadResource(url, outputDir, resourceUrl, element, attr, $, resourcesDir)
                   .catch((err) => {
                     console.error(`Error downloading resource: ${resourceUrl}, ${err.message}`);
-                    return Promise.reject(new Error(`Error downloading resource: ${resourceUrl}, ${err.message}`));
+                    return Promise.reject(new Error(err));
                   }),
               };
               downloadTasks.push(task);
@@ -119,7 +120,7 @@ const downloadPage = (url, outputDir = '') => {
         });
     })
     .catch((err) => {
-      console.error(`Error downloading page: ${url}, ${err.message}`);
+      console.error(`Failed to download resource: ${url}, ${err.message}`);
       return Promise.reject(new Error(`Download failed for URL ${url}: ${err.message}`));
     });
 };

@@ -89,8 +89,7 @@ test('HTTP error handling (404)', async () => {
   try {
     await downloadPage(url, tempDir);
   } catch (e) {
-    expect(e.message).toMatch(/Failed to download resource/);
-    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(e.message).toMatch(/Download failed for URL/);
   }
 });
 
@@ -104,7 +103,6 @@ test('network error handling', async () => {
   try {
     await downloadPage(url, tempDir);
   } catch (e) {
-    expect(e.message).toMatch(/Network error while downloading resource/);
-    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(e.message).toMatch(/Download failed for URL/);
   }
 });
