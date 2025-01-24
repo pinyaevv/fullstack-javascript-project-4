@@ -108,14 +108,3 @@ test('network error handling', async () => {
     expect(process.exit).toHaveBeenCalledWith(1);
   }
 });
-
-test('should exit with code 1 on error', async () => {
-  const url = 'http://somesite';
-
-  try {
-    await downloadPage(url);
-  } catch (e) {
-    expect(e.message).toMatch(/Failed to download page/);
-  }
-  expect(process.exit).toHaveBeenCalledWith(1);
-});

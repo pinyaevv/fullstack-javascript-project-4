@@ -33,9 +33,8 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
     .get(fullUrl, { responseType: 'arraybuffer' })
     .then((response) => {
       if (response.status !== 200) {
-        const errorMessage = `Failed to download resource: ${fullUrl} with status: ${response.status}`;
-        console.error(errorMessage);
-        process.exit(1);
+        console.error(`Failed to download resource: ${fullUrl} with status: ${response.status}`);
+        return;
       }
 
       return fs.writeFile(filePath, response.data)
@@ -128,7 +127,3 @@ const downloadPage = (url, outputDir = '') => {
 };
 
 export default downloadPage;
-
-// не понимаю, если я ставли ради теста на 126 строчке process.exit(0); то тесты Хекслета ругаются, что ошибка не выбрасывается.
-// если я оставляю process.exit(1); то тесты ругаются, что код выкидывает ошибку с кодом 1 и останавливает процесс.
-// в своих тестах я перехватываю process.exit() в beforeEach - jest.spyOn(process, 'exit').mockImplementation(() => {});
