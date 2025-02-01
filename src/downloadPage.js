@@ -4,6 +4,7 @@ import path from 'path';
 import * as cheerio from 'cheerio';
 import debug from 'debug';
 import Listr from 'listr';
+import { urlToFilename, urlToDirname, getExtension } from './utils.js';
 
 const recLog = debug('page-loader');
 
@@ -58,71 +59,15 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
 
 const downloadPage = (url, outputDir = '') => {
   recLog('Started downloading page', url);
-  return axios
-    .get(url)
-    .then((response) => {
-      const pageContent = response.data;
-      recLog('Received data from server', pageContent.length);
-      const $ = cheerio.load(pageContent);
 
-      const dirName = url
-        .replace(/^https?:\/\//, '')
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .concat('_files');
-      const correctedDirName = dirName.replace('-_files', '_files');
-      const resourcesDir = path.join(outputDir, correctedDirName);
-
-      return fs.access(resourcesDir)
-        .catch(() => fs.mkdir(resourcesDir))
-        .then(() => {
-          const downloadTasks = [];
-          const pageOrigin = new URL(url).origin;
-
-          $('link[href], script[src], img[src]').each((_, element) => {
-            const attr = $(element).is('link') || $(element).is('script') ? 'href' : 'src';
-            const resourceUrl = $(element).attr(attr);
-
-            if (!resourceUrl) {
-              return;
-            }
-
-            const fullUrl = new URL(resourceUrl, url).toString();
-
-            if (fullUrl.startsWith(pageOrigin)) {
-              const task = {
-                title: `Downloading: ${resourceUrl}`,
-                task: () => downloadResource(url, outputDir, resourceUrl, element, attr, $, resourcesDir)
-                  .catch((err) => {
-                    console.error(`Error downloading resource: ${resourceUrl}, ${err.message}`);
-                    return Promise.reject(new Error(err));
-                  }),
-              };
-              downloadTasks.push(task);
-            }
-          });
-
-          const tasks = new Listr(downloadTasks, {
-            concurrent: true,
-            exitOnError: false,
-          });
-
-          recLog('Starting to download resources for page:', url);
-          return tasks.run();
-        })
-        .then(() => {
-          const htmlFileName = generateFileName(url);
-          const htmlFilePath = path.join(outputDir, htmlFileName);
-
-          return fs.writeFile(htmlFilePath, $.html(), 'utf-8').then(() => {
-            recLog('Page saved to:', htmlFilePath);
-            return htmlFilePath;
-          });
-        });
-    })
-    .catch((err) => {
-      console.error(`Failed to download resource: ${url}, ${err.message}`);
-      return Promise.reject(new Error(`Download failed for URL ${url}: ${err.message}`));
-    });
+  const url = new URL(url);
+  const slug = (url.hostname + url.pathname);
+  const fileName = urlToFilename(slug);
+  const fullOutputDirname = path.join(outputDir, fileName);
+  const extension = getExtension(fileName) === '.html' ? '' : '.html';
+  const fullOutputFilename = path.join(fullOutputDirname, fileName + extension);
+  const assetsDirname = urlToDirname(slug);
+  const fullOutputAssetsDirname = path.join(fullOutputDirname, assetsDirname);
 };
 
 export default downloadPage;
