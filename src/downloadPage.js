@@ -60,14 +60,34 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
 const downloadPage = (url, outputDir = '') => {
   recLog('Started downloading page', url);
 
-  const url = new URL(url);
-  const slug = (url.hostname + url.pathname);
+  const parsedUrl = new URL(url);
+  const slug = (parsedUrl.hostname + parsedUrl.pathname);
   const fileName = urlToFilename(slug);
   const fullOutputDirname = path.join(outputDir, fileName);
   const extension = getExtension(fileName) === '.html' ? '' : '.html';
   const fullOutputFilename = path.join(fullOutputDirname, fileName + extension);
   const assetsDirname = urlToDirname(slug);
   const fullOutputAssetsDirname = path.join(fullOutputDirname, assetsDirname);
+
+  let pageData = '';
+
+  return axios.get(url)
+    .then((response) => {
+      recLog('Page downloaded');
+
+      pageData = preparedAssets(parsedUrl.origin, assetsDirname, response.data);
+
+      recLog(`Checking if assets directory: ${fullOutputAssetsDirname}`);
+      return fs.access(fullOutputAssetsDirname);
+    })
+    .catch(() => {
+      recLog(`Creating assets directory: ${fullOutputAssetsDirname}`);
+      return fs.mkdir(fullOutputAssetsDirname);
+    })
+    .then(() => {
+      recLog(`Saving HTML to ${fullOutputFilename}`);
+      return fs.writeFile(fullOutputFilename, pageData);
+    })
 };
 
 export default downloadPage;
