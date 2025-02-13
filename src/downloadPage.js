@@ -78,11 +78,12 @@ const downloadPage = (url, outputDir = '') => {
       pageData = preparedAssets(parsedUrl.origin, assetsDirname, response.data);
 
       recLog(`Checking if assets directory: ${fullOutputAssetsDirname}`);
-      return fs.access(fullOutputAssetsDirname);
-    })
-    .catch(() => {
-      recLog(`Creating assets directory: ${fullOutputAssetsDirname}`);
-      return fs.mkdir(fullOutputAssetsDirname);
+      return fs.access(fullOutputAssetsDirname)
+        .catch(() => {
+          recLog(`Creating assets directory: ${fullOutputAssetsDirname}`);
+          return fs.mkdir(fullOutputAssetsDirname);
+        })
+        .then(() => pageData);
     })
     .then(() => {
       recLog(`Saving HTML to ${fullOutputFilename}`);
