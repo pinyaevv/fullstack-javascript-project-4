@@ -57,6 +57,17 @@ const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, res
     });
 };
 
+const mapping = {
+  link: 'href',
+  script: 'src',
+  img: 'src',
+};
+
+const preparedAssets = (baseUrl, assetsDirname, htmlData) => {
+  const $ = cheerio.load(htmlData, { decodeEntities: false });
+  const assets = [];
+};
+
 const downloadPage = (url, outputDir = '') => {
   recLog('Started downloading page', url);
 
@@ -77,18 +88,17 @@ const downloadPage = (url, outputDir = '') => {
 
       pageData = preparedAssets(parsedUrl.origin, assetsDirname, response.data);
 
+      recLog(`Saving HTML to ${fullOutputFilename}`);
+      return fs.writeFile(fullOutputFilename, pageData);
+    })
+    .then(() => {
       recLog(`Checking if assets directory: ${fullOutputAssetsDirname}`);
       return fs.access(fullOutputAssetsDirname)
         .catch(() => {
           recLog(`Creating assets directory: ${fullOutputAssetsDirname}`);
           return fs.mkdir(fullOutputAssetsDirname);
-        })
-        .then(() => pageData);
-    })
-    .then(() => {
-      recLog(`Saving HTML to ${fullOutputFilename}`);
-      return fs.writeFile(fullOutputFilename, pageData);
-    })
+        });
+    });
 };
 
 export default downloadPage;
