@@ -66,6 +66,21 @@ const mapping = {
 const preparedAssets = (baseUrl, assetsDirname, htmlData) => {
   const $ = cheerio.load(htmlData, { decodeEntities: false });
   const assets = [];
+
+  Object.entries(mapping).filter(([tagName, attrName]) => {
+    const elements = $(tagName).toArray();
+    const elementsWithUrls = elements
+     .map((element) => {
+      const url = $(element);
+      return { url };
+     })
+     .filter(({ url }) => url.attr(attrName))
+     .map(({ element, url }) => {
+      const fullUrl = new URL(url, baseUrl);
+      return { element, url: fullUrl };
+     })
+     .filter(({ url }) => url.origin === baseUrl);
+  });
 };
 
 const downloadPage = (url, outputDir = '') => {
