@@ -67,20 +67,22 @@ const preparedAssets = (baseUrl, assetsDirname, htmlData) => {
   const $ = cheerio.load(htmlData, { decodeEntities: false });
   const assets = [];
 
-  Object.entries(mapping).filter(([tagName, attrName]) => {
-    const elements = $(tagName).toArray();
-    const elementsWithUrls = elements
-     .map((element) => {
-      const url = $(element);
-      return { url };
-     })
-     .filter(({ url }) => url.attr(attrName))
-     .map(({ element, url }) => {
-      const fullUrl = new URL(url, baseUrl);
-      return { element, url: fullUrl };
-     })
-     .filter(({ url }) => url.origin === baseUrl);
+  Object.entries(mapping).forEach(([tagName, attrName]) => {
+    const $elements = $(tagName).toArray();
+    const elementsWithUrl = $elements.map((element) => $(element))
+    .filter(($elements) => $elements.attr(attrName))
+    .map(($element) => ({$element, url: new URL($element.attr(attrName), website)}))
+    .filter(({ url }) => url.origin === website);
+
+    elementsWithUrl.forEach(({ $elements, url }) => {
+      const slug = urlToFilename(`${url.hostname}${url.pathname}`);
+      const filePath = path.join(baseUrl, slug);
+      assets.push({ url, fileName: slug });
+      $elements.attr(attrName, filePath);
+    });
   });
+  
+  return { html: $.html(), assets };
 };
 
 const downloadPage = (url, outputDir = '') => {
