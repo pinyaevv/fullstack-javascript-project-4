@@ -85,6 +85,14 @@ const preparedAssets = (baseUrl, assetsDirname, htmlData) => {
   return { html: $.html(), assets };
 };
 
+const downloadAsset = (dirname, fileName, url) => {
+  axios.get(url.toString(), { responseType: 'arraybuffer' })
+    .then((response) => {
+      const fullPath = path.join(dirname, fileName);
+      return fs.writeFile(fullPath, response.data);
+    })
+};
+
 const downloadPage = (url, outputDir = '') => {
   recLog('Started downloading page', url);
 
@@ -115,6 +123,16 @@ const downloadPage = (url, outputDir = '') => {
           recLog(`Creating assets directory: ${fullOutputAssetsDirname}`);
           return fs.mkdir(fullOutputAssetsDirname);
         });
+    })
+    .then(() => {
+      const tasks = new Listr(pageData.assets.map((asset) => ({
+        title: asset.url,
+        task: () => {
+          recLog(`Strating dowloading ${asset.fileName}`);
+          downloadAsset(fullOutputAssetsDirname, asset).catch(() => {})
+        }
+      })));
+      return tasks;
     });
 };
 
