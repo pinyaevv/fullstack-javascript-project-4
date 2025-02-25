@@ -8,78 +8,29 @@ import { urlToFilename, urlToDirname, getExtension } from './utils.js';
 
 const recLog = debug('page-loader');
 
-const generateFileName = (resourceUrl) => {
-  const parsedUrl = new URL(resourceUrl);
-  const ext = path.extname(parsedUrl.pathname) || '.html';
-
-  let baseName = resourceUrl
-    .replace(/^https?:\/\//, '')
-    .replace(/[^a-zA-Z0-9.]/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-  if (ext !== '.html') {
-    baseName = baseName.slice(0, -ext.length).replace(/\./g, '-');
-  }
-
-  return `${encodeURIComponent(baseName)}${ext}`;
-};
-
-const downloadResource = (baseUrl, outputDir, resourceUrl, element, attr, $, resourcesDir) => {
-  const fullUrl = new URL(resourceUrl, baseUrl).toString();
-  const fileName = generateFileName(resourceUrl);
-  const isHtml = path.extname(fileName) === '.html';
-  const filePath = isHtml ? path.join(outputDir, fileName) : path.join(resourcesDir, fileName);
-
-  return axios
-    .get(fullUrl, { responseType: 'arraybuffer' })
-    .then((response) => {
-      if (response.status !== 200) {
-        console.error(`Failed to download resource: ${fullUrl} with status: ${response.status}`);
-        return;
-      }
-
-      return fs.writeFile(filePath, response.data)
-        .then(() => {
-          const relativePath = isHtml
-            ? fileName
-            : path.posix.join(path.basename(resourcesDir), fileName);
-          $(element).attr(attr, relativePath);
-          recLog(`Resource saved: ${filePath}`);
-        })
-        .catch((err) => {
-          console.error(`Error writing resource to file: ${filePath}, ${err.message}`);
-          process.exit(1);
-        });
-    })
-    .catch((err) => {
-      console.error(`Failed to download resource: ${fullUrl}, ${err.message}`);
-      process.exit(1);
-    });
-};
-
 const mapping = {
   link: 'href',
   script: 'src',
   img: 'src',
 };
 
-const preparedAssets = (baseUrl, assetsDirname, htmlData) => {
+const preparedAssets = (website, baseDirname, htmlData) => {
   const $ = cheerio.load(htmlData, { decodeEntities: false });
   const assets = [];
 
   Object.entries(mapping).forEach(([tagName, attrName]) => {
     const $elements = $(tagName).toArray();
-    const elementsWithUrl = $elements.map((element) => $(element))
-    .filter(($elements) => $elements.attr(attrName))
-    .map(($element) => ({$element, url: new URL($element.attr(attrName), website)}))
-    .filter(({ url }) => url.origin === website);
+    const elementsWithUrls = $elements.map((element) => $(element))
+      .filter(($element) => $element.attr(attrName))
+      .map(($element) => ({ $element, url: new URL($element.attr(attrName), website) }))
+      .filter(({ url }) => url.origin === website);
 
-    elementsWithUrl.forEach(({ $elements, url }) => {
-      const slug = urlToFilename(`${url.hostname}${url.pathname}`);
-      const filePath = path.join(baseUrl, slug);
-      assets.push({ url, fileName: slug });
-      $elements.attr(attrName, filePath);
-    });
+      elementsWithUrls.forEach(({ $element, url }) => {
+        const slug = urlToFilename(`${url.hostname}${url.pathname}`);
+        const filepath = path.join(baseDirname, slug);
+        assets.push({ url, filename: slug });
+        $element.attr(attrName, filepath);
+      });
   });
   
   return { html: $.html(), assets };
@@ -113,26 +64,26 @@ const downloadPage = (url, outputDir = '') => {
 
       pageData = preparedAssets(parsedUrl.origin, assetsDirname, response.data);
 
-      recLog(`Saving HTML to ${fullOutputFilename}`);
-      return fs.writeFile(fullOutputFilename, pageData);
-    })
-    .then(() => {
       recLog(`Checking if assets directory: ${fullOutputAssetsDirname}`);
       return fs.access(fullOutputAssetsDirname)
         .catch(() => {
           recLog(`Creating assets directory: ${fullOutputAssetsDirname}`);
-          return fs.mkdir(fullOutputAssetsDirname);
+          return fs.mkdir(fullOutputAssetsDirname, { recursive: true });
         });
+    })
+    .then(() => {
+      recLog(`Saving HTML to ${fullOutputFilename}`);
+      return fs.writeFile(fullOutputFilename, pageData.html);
     })
     .then(() => {
       const tasks = new Listr(pageData.assets.map((asset) => ({
         title: asset.url,
         task: () => {
           recLog(`Strating dowloading ${asset.fileName}`);
-          downloadAsset(fullOutputAssetsDirname, asset).catch(() => {})
+          return downloadAsset(fullOutputAssetsDirname, asset).catch(() => {})
         }
       })));
-      return tasks;
+      return tasks.run();
     });
 };
 

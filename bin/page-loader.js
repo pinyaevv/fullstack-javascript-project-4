@@ -2,7 +2,6 @@
 
 import { program } from 'commander';
 import downloadPage from '../index.js';
-import path from 'path';
 
 program
   .name('page-loader')
@@ -11,8 +10,7 @@ program
   .option('-o, --output [dir]', 'output dir', process.cwd())
   .argument('<url>', 'URL to download')
   .action((url, options) => {
-    const outputDir = path.resolve(options.output);
-    downloadPage(url, outputDir)
+    downloadPage(url, options.output)
       .then((filePath) => {
         console.log(`Page was successfully download into ${filePath}`);
       })

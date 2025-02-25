@@ -73,36 +73,24 @@ test('download page and save it', async () => {
 
 test('HTTP error handling (404)', async () => {
   const url = 'https://ru.hexlet.io/';
+  
+  nock('https://ru.hexlet.io')
+    .get('/')
+    .reply(200, '<img src="https://cdn2.hexlet.io/notfound">');
 
   nock('https://cdn2.hexlet.io')
     .get('/notfound')
     .reply(404);
-  
-  nock('https://fonts.googleapis.com')
-    .get('/some-resource')
-    .reply(404, 'Not Found');
 
-  nock('https://fonts.gstatic.com')
-    .get('/some-resource')
-    .reply(404, 'Not Found');
-
-  try {
-    await downloadPage(url, tempDir);
-  } catch (e) {
-    expect(e.message).toMatch(/Download failed for URL/);
-  }
+  await expect(downloadPage(url, tempDir)).rejects.toThrow();
 });
 
-test('network error handling', async () => {
+test('Network error handling', async () => {
   const url = 'https://ru.hexlet.io';
 
   nock('https://ru.hexlet.io')
     .get('/')
     .replyWithError('Network error');
 
-  try {
-    await downloadPage(url, tempDir);
-  } catch (e) {
-    expect(e.message).toMatch(/Download failed for URL/);
-  }
+  await expect(downloadPage(url, tempDir)).rejects.toThrow();
 });
