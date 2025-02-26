@@ -84,6 +84,10 @@ const downloadPage = (url, outputDir = '') => {
         }
       })));
       return tasks.run();
+    })
+    .catch((error) => {
+      recLog('Error loading page and resources:', error);
+      throw new Error('Failed to load page');
     });
 };
 
