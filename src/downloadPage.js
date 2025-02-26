@@ -69,10 +69,6 @@ const downloadPage = (url, outputDir = '') => {
         .catch(() => {
           recLog(`Creating assets directory: ${fullOutputAssetsDirname}`);
           return fs.mkdir(fullOutputAssetsDirname, { recursive: true });
-        })
-        .catch((error) => {
-          recLog(`Error handling directory ${fullOutputAssetsDirname}:`, error);
-          throw new Error('Failed to handle directory');
         });
     })
     .then(() => {
