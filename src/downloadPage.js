@@ -37,7 +37,7 @@ const preparedAssets = (website, baseDirname, htmlData) => {
 };
 
 const downloadAsset = (dirname, { filename, url }) => {
-  return axios.get(url.toString(), { responseType: 'arraybuffer' })
+  axios.get(url.toString(), { responseType: 'arraybuffer' })
     .then((response) => {
       const fullPath = path.join(dirname, filename);
       return fs.writeFile(fullPath, response.data);
@@ -50,7 +50,7 @@ const downloadPage = (url, outputDir = '') => {
   const parsedUrl = new URL(url);
   const slug = (parsedUrl.hostname + parsedUrl.pathname);
   const fileName = urlToFilename(slug);
-  const fullOutputDirname = path.join(outputDir, fileName);
+  const fullOutputDirname = path.resolve(process.cwd(), outputDir);
   const extension = getExtension(fileName) === '.html' ? '' : '.html';
   const fullOutputFilename = path.join(fullOutputDirname, fileName + extension);
   const assetsDirname = urlToDirname(slug);
@@ -79,15 +79,14 @@ const downloadPage = (url, outputDir = '') => {
       const tasks = new Listr(pageData.assets.map((asset) => ({
         title: asset.url.toString(),
         task: () => {
-          recLog(`Strating dowloading ${asset.fileName}`);
+          recLog(`Starting dowloading ${asset.fileName}`);
           return downloadAsset(fullOutputAssetsDirname, asset);
         }
-      })));
+      })), { concurrent: true });
       return tasks.run();
     })
-    .catch((error) => {
-      recLog('Error loading page and resources:', error);
-      throw new Error('Failed to load page');
+    .then(() => {
+      return { filepath: fullOutputFilename };
     });
 };
 
