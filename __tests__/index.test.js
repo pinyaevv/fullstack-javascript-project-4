@@ -73,7 +73,7 @@ test('download page and save it', async () => {
 
 test('HTTP error handling (404)', async () => {
   const url = 'https://ru.hexlet.io/';
-  
+
   nock('https://ru.hexlet.io')
     .get('/')
     .reply(200, '<img src="https://cdn2.hexlet.io/notfound">');
@@ -82,7 +82,11 @@ test('HTTP error handling (404)', async () => {
     .get('/notfound')
     .reply(404);
 
-  await expect(downloadPage(url, tempDir)).rejects.toThrow();
+  try {
+    await downloadPage(url, tempDir);
+  } catch (error) {
+    expect(error.message).toBe('Failed to download page: https://ru.hexlet.io/. Error: Request failed with status code 404');
+  }
 });
 
 test('Network error handling', async () => {
@@ -92,5 +96,9 @@ test('Network error handling', async () => {
     .get('/')
     .replyWithError('Network error');
 
-  await expect(downloadPage(url, tempDir)).rejects.toThrow();
+  try {
+    await downloadPage(url, tempDir);
+  } catch (error) {
+    expect(error.message).toBe('Failed to download page: https://ru.hexlet.io/. Error: Request failed with status code 404');
+  }
 });

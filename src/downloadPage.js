@@ -36,12 +36,12 @@ const preparedAssets = (website, baseDirname, htmlData) => {
   return { html: $.html(), assets };
 };
 
-const downloadAsset = (dirname, fileName, url) => {
-  axios.get(url.toString(), { responseType: 'arraybuffer' })
+const downloadAsset = (dirname, { filename, url }) => {
+  return axios.get(url.toString(), { responseType: 'arraybuffer' })
     .then((response) => {
-      const fullPath = path.join(dirname, fileName);
+      const fullPath = path.join(dirname, filename);
       return fs.writeFile(fullPath, response.data);
-    })
+    });
 };
 
 const downloadPage = (url, outputDir = '') => {
@@ -77,10 +77,10 @@ const downloadPage = (url, outputDir = '') => {
     })
     .then(() => {
       const tasks = new Listr(pageData.assets.map((asset) => ({
-        title: asset.url,
+        title: asset.url.toString(),
         task: () => {
           recLog(`Strating dowloading ${asset.fileName}`);
-          return downloadAsset(fullOutputAssetsDirname, asset).catch(() => {})
+          return downloadAsset(fullOutputAssetsDirname, asset);
         }
       })));
       return tasks.run();
