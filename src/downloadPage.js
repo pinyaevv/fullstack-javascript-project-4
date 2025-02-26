@@ -68,7 +68,7 @@ const downloadPage = (url, outputDir = '') => {
       return fs.access(fullOutputAssetsDirname)
         .catch(() => {
           recLog(`Creating assets directory: ${fullOutputAssetsDirname}`);
-          return fs.mkdir(fullOutputAssetsDirname, { recursive: true });
+          return fs.mkdir(fullOutputAssetsDirname);
         });
     })
     .then(() => {
