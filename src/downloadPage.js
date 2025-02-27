@@ -37,7 +37,7 @@ const preparedAssets = (website, baseDirname, htmlData) => {
 };
 
 const downloadAsset = (dirname, { filename, url }) => {
-  axios.get(url.toString(), { responseType: 'arraybuffer' })
+  return axios.get(url.toString(), { responseType: 'arraybuffer' })
     .then((response) => {
       const fullPath = path.join(dirname, filename);
       return fs.writeFile(fullPath, response.data);
@@ -79,15 +79,13 @@ const downloadPage = (url, outputDir = '') => {
       const tasks = new Listr(pageData.assets.map((asset) => ({
         title: asset.url.toString(),
         task: () => {
-          recLog(`Starting dowloading ${asset.fileName}`);
+          recLog(`Strating dowloading ${asset.fileName}`);
           return downloadAsset(fullOutputAssetsDirname, asset);
         }
-      })), { concurrent: true });
+      })));
       return tasks.run();
     })
-    .then(() => {
-      return { filepath: fullOutputFilename };
-    });
+    .then(() => ({ filepath: fullOutputFilename }));
 };
 
 export default downloadPage;
