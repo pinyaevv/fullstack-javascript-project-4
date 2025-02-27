@@ -8,13 +8,9 @@ export default [
     files: ['**/*.js'],
     languageOptions: {
       sourceType: 'module',
-    },
-  },
-  {
-    languageOptions: {
       globals: {
-        ...globals.node,
-        ...globals.jest,
+        ...globals.node,  // Глобальные переменные для Node.js
+        ...globals.jest,  // Глобальные переменные для Jest
       },
     },
   },
@@ -26,11 +22,6 @@ export default [
     rules: {
       'jest/consistent-test-it': 'warn',
       'jest/no-disabled-tests': 'warn',
-    },
-  },
-  {
-    env: {
-      jest: true,
     },
   },
 ];

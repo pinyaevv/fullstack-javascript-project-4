@@ -1,9 +1,9 @@
-import axios from '../debug/debug-axios.js';
 import fs from 'fs/promises';
 import path from 'path';
 import * as cheerio from 'cheerio';
 import Listr from 'listr';
 import debug from 'debug';
+import axios from '../debug/debug-axios.js';
 import { urlToFilename, urlToDirname, getExtension } from './utils.js';
 
 const recLog = debug('page-loader');
@@ -36,12 +36,11 @@ const preparedAssets = (website, baseDirname, htmlData) => {
   return { html: $.html(), assets };
 };
 
-const downloadAsset = (dirname, { filename, url }) =>
-  axios.get(url.toString(), { responseType: 'arraybuffer' })
-    .then((response) => {
-      const fullPath = path.join(dirname, filename);
-      return fs.writeFile(fullPath, response.data);
-    });
+const downloadAsset = (dirname, { filename, url }) => axios.get(url.toString(), { responseType: 'arraybuffer' })
+  .then((response) => {
+    const fullPath = path.join(dirname, filename);
+    return fs.writeFile(fullPath, response.data);
+  });
 
 const downloadPage = (url, outputDir = '') => {
   recLog('Started downloading page', url);

@@ -67,7 +67,7 @@ test('download page and save it', async () => {
   expect(fileExists).toBe(true);
 
   const fileData = await fs.readFile(filePath, 'utf-8');
-  
+
   expect(normalizeHtml(fileData)).toEqual(normalizeHtml(dataExpected));
 });
 
