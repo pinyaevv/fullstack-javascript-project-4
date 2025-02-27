@@ -1,4 +1,3 @@
-import globals from 'globals';
 import pluginJs from '@eslint/js';
 import eslintPluginJest from 'eslint-plugin-jest';
 
@@ -8,13 +7,22 @@ export default [
     files: ['**/*.js'],
     languageOptions: {
       sourceType: 'module',
-      globals: {
-        ...globals.node,  // Глобальные переменные для Node.js
-        ...globals.jest,  // Глобальные переменные для Jest
-      },
     },
   },
   pluginJs.configs.recommended,
+  {
+    overrides: [
+      {
+        files: ['**/__tests__/**/*.js'],
+        languageOptions: {
+          env: {
+            jest: true,
+            node: true,
+          },
+        },
+      },
+    ],
+  },
   {
     plugins: {
       jest: eslintPluginJest,
