@@ -3,9 +3,9 @@ import debug from 'debug';
 import path, { dirname } from 'path';
 import nock from 'nock';
 import os from 'os';
-import downloadPage from '../src/downloadPage.js';
 import { jest } from '@jest/globals';
 import { fileURLToPath } from 'url';
+import downloadPage from '../src/downloadPage.js';
 
 const logNock = debug('page-loader:nock');
 nock.disableNetConnect();

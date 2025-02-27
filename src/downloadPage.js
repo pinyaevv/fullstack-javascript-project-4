@@ -2,8 +2,8 @@ import axios from '../debug/debug-axios.js';
 import fs from 'fs/promises';
 import path from 'path';
 import * as cheerio from 'cheerio';
-import debug from 'debug';
 import Listr from 'listr';
+import debug from 'debug';
 import { urlToFilename, urlToDirname, getExtension } from './utils.js';
 
 const recLog = debug('page-loader');
@@ -25,24 +25,23 @@ const preparedAssets = (website, baseDirname, htmlData) => {
       .map(($element) => ({ $element, url: new URL($element.attr(attrName), website) }))
       .filter(({ url }) => url.origin === website);
 
-      elementsWithUrls.forEach(({ $element, url }) => {
-        const slug = urlToFilename(`${url.hostname}${url.pathname}`);
-        const filepath = path.join(baseDirname, slug);
-        assets.push({ url, filename: slug });
-        $element.attr(attrName, filepath);
-      });
+    elementsWithUrls.forEach(({ $element, url }) => {
+      const slug = urlToFilename(`${url.hostname}${url.pathname}`);
+      const filepath = path.join(baseDirname, slug);
+      assets.push({ url, filename: slug });
+      $element.attr(attrName, filepath);
+    });
   });
-  
+
   return { html: $.html(), assets };
 };
 
-const downloadAsset = (dirname, { filename, url }) => {
-  return axios.get(url.toString(), { responseType: 'arraybuffer' })
+const downloadAsset = (dirname, { filename, url }) =>
+  axios.get(url.toString(), { responseType: 'arraybuffer' })
     .then((response) => {
       const fullPath = path.join(dirname, filename);
       return fs.writeFile(fullPath, response.data);
     });
-};
 
 const downloadPage = (url, outputDir = '') => {
   recLog('Started downloading page', url);
@@ -81,7 +80,7 @@ const downloadPage = (url, outputDir = '') => {
         task: () => {
           recLog(`Strating dowloading ${asset.fileName}`);
           return downloadAsset(fullOutputAssetsDirname, asset);
-        }
+        },
       })), { concurrent: true });
       return tasks.run();
     })
