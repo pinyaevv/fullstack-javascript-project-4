@@ -82,7 +82,7 @@ const downloadPage = (url, outputDir = '') => {
           recLog(`Strating dowloading ${asset.fileName}`);
           return downloadAsset(fullOutputAssetsDirname, asset);
         }
-      })));
+      })), { concurrent: true });
       return tasks.run();
     })
     .then(() => ({ filepath: fullOutputFilename }));
