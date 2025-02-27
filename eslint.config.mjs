@@ -1,13 +1,13 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import eslintPluginJest from "eslint-plugin-jest";
+import globals from 'globals';
+import pluginJs from '@eslint/js';
+import eslintPluginJest from 'eslint-plugin-jest';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    files: ["**/*.js"],
+    files: ['**/*.js'],
     languageOptions: {
-      sourceType: "module",
+      sourceType: 'module',
     },
   },
   {
@@ -24,8 +24,13 @@ export default [
       jest: eslintPluginJest,
     },
     rules: {
-      "jest/consistent-test-it": "warn",
-      "jest/no-disabled-tests": "warn",
+      'jest/consistent-test-it': 'warn',
+      'jest/no-disabled-tests': 'warn',
+    },
+  },
+  {
+    env: {
+      jest: true,
     },
   },
 ];

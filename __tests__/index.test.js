@@ -88,3 +88,19 @@ test('HTTP error handling (404)', async () => {
     expect(error.message).toBe('Failed to download page: https://ru.hexlet.io/. Error: Request failed with status code 404');
   }
 });
+
+test('should handle error when creating assets directory', async () => {
+  const url = 'https://example.com';
+  const htmlContent = '<html><body><img src="https://example.com/image.jpg"></body></html>';
+  const tempDir = '/tmp';
+
+  nock('https://example.com')
+    .get('/')
+    .reply(200, htmlContent);
+
+  jest.spyOn(fs, 'mkdir').mockRejectedValueOnce(new Error('Failed to create directory'));
+
+  await expect(downloadPage(url, tempDir)).rejects.toThrow('Failed to create directory');
+
+  fs.mkdir.mockRestore();
+});
