@@ -92,7 +92,6 @@ test('HTTP error handling (404)', async () => {
 test('should handle error when creating assets directory', async () => {
   const url = 'https://example.com';
   const htmlContent = '<html><body><img src="https://example.com/image.jpg"></body></html>';
-  const tempDir = '/tmp';
 
   nock('https://example.com')
     .get('/')
