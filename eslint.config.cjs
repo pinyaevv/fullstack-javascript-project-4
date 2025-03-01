@@ -26,7 +26,6 @@ module.exports = [
           allow: ['__filename', '__dirname'],
         },
       ],
-      'object-curly-newline': 'off',
       'import/extensions': [
         'error',
         'ignorePackages',
