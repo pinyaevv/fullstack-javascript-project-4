@@ -87,3 +87,4 @@ const downloadPage = (url, outputDir = '') => {
 };
 
 export default downloadPage;
+export { preparedAssets };

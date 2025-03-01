@@ -2,6 +2,7 @@ import globals from 'globals';
 import { FlatCompat } from '@eslint/eslintrc';
 import pluginJs from '@eslint/js';
 import importPlugin from 'eslint-plugin-import';
+import jestPlugin from 'eslint-plugin-jest';
 
 const compat = new FlatCompat({
   recommendedConfig: pluginJs.configs.recommended,
@@ -12,15 +13,19 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.jest,
+        ...globals.jest, // Добавляем Jest-глобалы корректно
       },
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
       },
     },
-    plugins: { import: importPlugin },
+    plugins: {
+      import: importPlugin,
+      jest: jestPlugin,
+    },
     rules: {
+      ...jestPlugin.configs.recommended.rules, // Подключаем правила Jest
       'max-len': ['error', { code: 120 }],
     },
   },

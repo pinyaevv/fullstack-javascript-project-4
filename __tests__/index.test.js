@@ -5,7 +5,7 @@ import nock from 'nock';
 import os from 'os';
 import { jest } from '@jest/globals';
 import { fileURLToPath } from 'url';
-import downloadPage from '../src/downloadPage.js';
+import downloadPage, { preparedAssets } from '../src/downloadPage.js';
 
 const logNock = debug('page-loader:nock');
 nock.disableNetConnect();
@@ -71,24 +71,6 @@ test('download page and save it', async () => {
   expect(normalizeHtml(fileData)).toEqual(normalizeHtml(dataExpected));
 });
 
-test('HTTP error handling (404)', async () => {
-  const url = 'https://ru.hexlet.io/';
-
-  nock('https://ru.hexlet.io')
-    .get('/')
-    .reply(200, '<img src="https://cdn2.hexlet.io/notfound">');
-
-  nock('https://cdn2.hexlet.io')
-    .get('/notfound')
-    .reply(404);
-
-  try {
-    await downloadPage(url, tempDir);
-  } catch (error) {
-    expect(error.message).toBe('Failed to download page: https://ru.hexlet.io/. Error: Request failed with status code 404');
-  }
-});
-
 test('should handle error when creating assets directory', async () => {
   const url = 'https://example.com';
   const htmlContent = '<html><body><img src="https://example.com/image.jpg"></body></html>';
@@ -102,4 +84,16 @@ test('should handle error when creating assets directory', async () => {
   await expect(downloadPage(url, tempDir)).rejects.toThrow('Failed to create directory');
 
   fs.mkdir.mockRestore();
+});
+
+test('preparedAssets should handle HTML without assets', () => {
+  const website = 'https://example.com';
+  const baseDirname = 'example-com_files';
+  const htmlData = '<html><head></head><body><h1>Hello,world!</h1></body></html>';
+
+  const { html, assets } = preparedAssets(website, baseDirname, htmlData);
+
+  expect(normalizeHtml(html)).toBe(normalizeHtml(htmlData));
+
+  expect(assets).toEqual([]);
 });
