@@ -3,7 +3,7 @@ import debug from 'debug';
 import path, { dirname } from 'path';
 import nock from 'nock';
 import os from 'os';
-import { jest } from '@jest/globals';
+import { jest, beforeEach, afterEach, test, expect } from '@jest/globals';
 import { fileURLToPath } from 'url';
 import downloadPage, { preparedAssets } from '../src/downloadPage.js';
 
